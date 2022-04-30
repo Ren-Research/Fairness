@@ -13,6 +13,9 @@ class MLP(nn.Module):
         self.layer_input = nn.Linear(dim_in, dim_hidden)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
+        #self.layer_hidden = nn.Linear(dim_hidden, dim_out)
+        
+        self.layer_hidden1 = nn.Linear(dim_hidden, dim_hidden)
         self.layer_hidden = nn.Linear(dim_hidden, dim_out)
 
     def forward(self, x):
@@ -20,6 +23,9 @@ class MLP(nn.Module):
         x = self.layer_input(x)
         x = self.dropout(x)
         x = self.relu(x)
+        #x = self.layer_hidden(x)
+        
+        x = self.layer_hidden1(x)
         x = self.layer_hidden(x)
         return x
 

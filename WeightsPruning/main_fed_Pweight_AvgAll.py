@@ -70,6 +70,14 @@ if __name__ == '__main__':
         net_glob = CNNCifar(args=args).to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
+        
+        net_2 = CNNMnist(args=args).to(args.device)
+        net_3 = CNNMnist(args=args).to(args.device)
+        net_4 = CNNMnist(args=args).to(args.device)
+        
+        net_51 = CNNMnist(args=args).to(args.device)
+        net_52 = CNNMnist(args=args).to(args.device)
+        net_53 = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
@@ -113,6 +121,7 @@ if __name__ == '__main__':
     """
     #    [0,50]         [50,100]         [100,150]        [150,200]
     w_glob = net_glob.state_dict()
+    print(w_glob)
     starting_weights = copy.deepcopy(w_glob)
 
     # ABS OR NO ABS ?
@@ -326,3 +335,4 @@ if __name__ == '__main__':
         # np.save(npy_name, loss_train)
         print("Training accuracy: {:.2f}==================================================".format(acc_train))
         print("Testing accuracy: {:.2f}==================================================".format(acc_test))
+        

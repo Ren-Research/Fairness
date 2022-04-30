@@ -31,41 +31,81 @@ def get_user_typep(x, setting_array=[7, 1, 1, 1]):
 # 0 ~ 39200 ~ 78400 ~ 117600 ~ 156800
 #    4      3       2        1
 def get_local_wmasks(ranks):
+#    local_masks = []
+#    mask = copy.deepcopy(ranks) * 0 + 1
+#    local_masks.append(mask.view(200, 784))
+#    mask0 = copy.deepcopy(ranks) * 0
+#    mask1 = copy.deepcopy(ranks) * 0 + 1
+#    # p2
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(torch.logical_and(x >= 78400, x < 117600), mask0, mask1)
+#    local_masks.append(mask.view(200, 784))
+#    # p3
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(torch.logical_and(x >= 39200, x < 78400), mask0, mask1)
+#    local_masks.append(mask.view(200, 784))
+#    # p4
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(x < 39200, mask0, mask1)
+#    local_masks.append(mask.view(200, 784))
+#
+#    # p51
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(torch.logical_and(x >= 39200, x < 117600), mask0, mask1)
+#    local_masks.append(mask.view(200, 784))
+#
+#    # p52
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(torch.logical_and(x >= 78400, x < 117600), mask0, mask1)
+#    mask = torch.where(torch.logical_and(x >= 0, x < 39200), mask0, mask)
+#    local_masks.append(mask.view(200, 784))
+#
+#    # p53
+#    x = copy.deepcopy(ranks)
+#    mask = torch.where(x < 78400, mask0, mask1)
+#    local_masks.append(mask.view(200, 784))
+#
+#    return local_masks
+    
     local_masks = []
     mask = copy.deepcopy(ranks) * 0 + 1
-    local_masks.append(mask.view(200, 784))
+    local_masks.append(mask.view(200, 3072))
     mask0 = copy.deepcopy(ranks) * 0
     mask1 = copy.deepcopy(ranks) * 0 + 1
     # p2
     x = copy.deepcopy(ranks)
-    mask = torch.where(torch.logical_and(x >= 78400, x < 117600), mask0, mask1)
-    local_masks.append(mask.view(200, 784))
+    mask = torch.where(torch.logical_and(x >= 307200, x < 460800), mask0, mask1)
+    local_masks.append(mask.view(200, 3072))
     # p3
     x = copy.deepcopy(ranks)
-    mask = torch.where(torch.logical_and(x >= 39200, x < 78400), mask0, mask1)
-    local_masks.append(mask.view(200, 784))
+    mask = torch.where(torch.logical_and(x >= 153600, x < 307200), mask0, mask1)
+    local_masks.append(mask.view(200, 3072))
     # p4
     x = copy.deepcopy(ranks)
-    mask = torch.where(x < 39200, mask0, mask1)
-    local_masks.append(mask.view(200, 784))
-
+    mask = torch.where(x < 153600, mask0, mask1)
+    local_masks.append(mask.view(200, 3072))
+    
     # p51
     x = copy.deepcopy(ranks)
-    mask = torch.where(torch.logical_and(x >= 39200, x < 117600), mask0, mask1)
-    local_masks.append(mask.view(200, 784))
-
+    mask = torch.where(torch.logical_and(x >= 153600, x < 460800), mask0, mask1)
+    local_masks.append(mask.view(200, 3072))
+    
     # p52
     x = copy.deepcopy(ranks)
-    mask = torch.where(torch.logical_and(x >= 78400, x < 117600), mask0, mask1)
-    mask = torch.where(torch.logical_and(x >= 0, x < 39200), mask0, mask)
-    local_masks.append(mask.view(200, 784))
-
+    mask = torch.where(torch.logical_and(x >= 307200, x < 460800), mask0, mask1)
+    mask = torch.where(torch.logical_and(x >= 0, x < 153600), mask0, mask)
+    local_masks.append(mask.view(200, 3072))
+    
     # p53
     x = copy.deepcopy(ranks)
-    mask = torch.where(x < 78400, mask0, mask1)
-    local_masks.append(mask.view(200, 784))
-
+    mask = torch.where(x < 307200, mask0, mask1)
+    local_masks.append(mask.view(200, 3072))
+    
     return local_masks
+
+
+
+
 
 
 def get_local_bmasks(ranks):
@@ -214,3 +254,4 @@ if __name__ == '__main__':
                                    ]))
     num = 100
     d = mnist_noniid(dataset_train, num)
+    
