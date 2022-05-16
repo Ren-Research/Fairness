@@ -107,12 +107,12 @@ def norm_grad(grad_list):
     # input: nested gradients
     # output: square of the L-2 norm
     keys = list(grad_list.keys())
-    
-    client_grads = to_device(grad_list[keys[0]].view(-1), cfg['device'])#.view(-1) # shape now: (784, 26)
+  
+    client_grads = grad_list[keys[0]].view(-1).cpu().numpy()#.view(-1) # shape now: (784, 26)
     #client_grads = np.append(client_grads, grad_list[keys[2]].view(-1)) # output a flattened array
     #print(client_grads)
     for k in keys[1:]:
-      client_grads = np.append(client_grads, to_device(grad_list[k].view(-1), cfg['device'])) # output a flattened array
+      client_grads = np.append(client_grads, grad_list[k].view(-1).cpu().numpy()) # output a flattened array
       
   #    for i in range(1, len(grad_list)):
   #        client_grads = np.append(client_grads, grad_list[i]) # output a flattened array--q 1 --device cpu --data_name MNIST --model_name conv --control_name 1_100_0.05_iid_fix_a2-b2-c2-d2-e2_bn_1_1
