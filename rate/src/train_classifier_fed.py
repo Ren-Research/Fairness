@@ -108,11 +108,11 @@ def norm_grad(grad_list):
     # output: square of the L-2 norm
     keys = list(grad_list.keys())
     
-    client_grads = grad_list[keys[0]].view(-1)#.view(-1) # shape now: (784, 26)
+    client_grads = to_device(grad_list[keys[0]].view(-1), cfg['device'])#.view(-1) # shape now: (784, 26)
     #client_grads = np.append(client_grads, grad_list[keys[2]].view(-1)) # output a flattened array
     #print(client_grads)
     for k in keys[1:]:
-      client_grads = np.append(client_grads, grad_list[k].view(-1)) # output a flattened array
+      client_grads = np.append(client_grads, to_device(grad_list[k].view(-1), cfg['device'])) # output a flattened array
       
   #    for i in range(1, len(grad_list)):
   #        client_grads = np.append(client_grads, grad_list[i]) # output a flattened array--q 1 --device cpu --data_name MNIST --model_name conv --control_name 1_100_0.05_iid_fix_a2-b2-c2-d2-e2_bn_1_1
@@ -244,7 +244,7 @@ def test(dataset, data_split, label_split, model, logger, epoch):
 
 def make_local(dataset, data_split, label_split, federation):
     num_active_users = int(np.ceil(cfg['frac'] * cfg['num_users']))
-    #torch.manual_seed(0)
+    torch.manual_seed(1)
     user_idx = torch.arange(cfg['num_users'])[torch.randperm(cfg['num_users'])[:num_active_users]].tolist()
     print("user_idx", user_idx)
     local_parameters, param_idx = federation.distribute(user_idx)
