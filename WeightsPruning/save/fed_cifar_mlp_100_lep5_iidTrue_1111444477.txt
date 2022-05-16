@@ -33,3 +33,15 @@ ARound   9, Testing accuracy: 45.56
 Round  10, Average loss 1.442
 TRound  10, Testing loss 1.566
 ARound  10, Testing accuracy: 45.50
+Round  11, Average loss 1.463
+TRound  11, Testing loss 1.559
+ARound  11, Testing accuracy: 45.84
+Round  12, Average loss 1.417
+TRound  -1, Testing loss 2.304
+ARound  -1, Testing accuracy: 11.75
+Round   0, Average loss 1.964
+TRound   0, Testing loss 1.893
+ARound   0, Testing accuracy: 34.95
+Round   1, Average loss 1.724
+TRound  -1, Testing loss 2.297
+ARound  -1, Testing accuracy: 11.49

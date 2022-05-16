@@ -15,8 +15,25 @@ from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, get_user_typep, g
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import FedAvg, FedAvg2
+from models.Fed import FedAvg, FedAvg2, aggregate2
 from models.test import test_img
+
+
+def norm_grad(grad_list):
+    # input: nested gradients
+    # output: square of the L-2 norm
+    keys = list(grad_list.keys())
+    
+    client_grads = grad_list[keys[0]].view(-1)#.view(-1) # shape now: (784, 26)
+    #client_grads = np.append(client_grads, grad_list[keys[2]].view(-1)) # output a flattened array
+    #print(client_grads)
+    for k in keys[1:]:
+        client_grads = np.append(client_grads, grad_list[k].view(-1)) # output a flattened array
+    
+#    for i in range(1, len(grad_list)):
+#        client_grads = np.append(client_grads, grad_list[i]) # output a flattened array
+        
+    return np.sqrt(np.sum(np.square(client_grads)))
 
 
 def get_sub_paras(w_glob, wmask, bmask):
@@ -64,6 +81,8 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
+    print("image size", img_size)
+    print("learning rate", args.lr, "epoch", args.epochs)
 
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
@@ -121,7 +140,7 @@ if __name__ == '__main__':
     """
     #    [0,50]         [50,100]         [100,150]        [150,200]
     w_glob = net_glob.state_dict()
-    print(w_glob)
+    #print(w_glob)
     starting_weights = copy.deepcopy(w_glob)
 
     # ABS OR NO ABS ?
@@ -147,7 +166,7 @@ if __name__ == '__main__':
     net_53.load_state_dict(w_n53)
 
     setting_arrays = [
-        # [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        #[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 
         # [1, 1, 1, 1, 1, 1, 4, 4, 4, 4],
 
@@ -167,7 +186,7 @@ if __name__ == '__main__':
 
         # [1, 1, 1, 4, 5, 5, 6, 6, 7, 7],
 
-        # [1, 2, 3, 4, 5, 5, 6, 6, 7, 7],
+        #[1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
 
         # [1, 4, 5, 5, 6, 6, 6, 7, 7, 7],
 
@@ -210,6 +229,8 @@ if __name__ == '__main__':
         ##########################TEMP USE FOR STRATING LOSS
 
         for iter in range(args.epochs):
+            Deltas = []
+            hs = []
 
             if iter > 0:  # >=5 , %5, % 50, ==5
                 w_glob = net_glob.state_dict()
@@ -257,46 +278,88 @@ if __name__ == '__main__':
                 if typep == 1:
                     type_array.append(1)
                     w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
+                    acc_test, loss_test = test_img(net_glob, dataset_test, args)
+                    
+                    f = 1.59
                 elif typep == 2:
                     type_array.append(2)
                     w, loss = local.train(net=copy.deepcopy(net_2).to(args.device))
+                    #acc_test, loss_test = test_img(net_2, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[1], local_b_masks[1])
+                    f = 0.5
                 elif typep == 3:
                     type_array.append(3)
                     w, loss = local.train(net=copy.deepcopy(net_3).to(args.device))
+                    #acc_test, loss_test = test_img(net_3, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[2], local_b_masks[2])
                 elif typep == 4:
                     type_array.append(4)
                     w, loss = local.train(net=copy.deepcopy(net_4).to(args.device))
+                    acc_test, loss_test = test_img(net_4, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[3], local_b_masks[3])
-
+                    
+                    f = 1.19
 
                 elif typep == 5:
                     type_array.append(5)
                     w, loss = local.train(net=copy.deepcopy(net_51).to(args.device))
+                    #acc_test, loss_test = test_img(net_51, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[4], local_b_masks[4])
                 elif typep == 6:
                     type_array.append(6)
                     w, loss = local.train(net=copy.deepcopy(net_51).to(args.device))
+                    #acc_test, loss_test = test_img(net_51, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[5], local_b_masks[5])
                 elif typep == 7:
                     type_array.append(7)
                     w, loss = local.train(net=copy.deepcopy(net_51).to(args.device))
+                    acc_test, loss_test = test_img(net_51, dataset_test, args)
                     w = get_sub_paras(w, local_w_masks[6], local_b_masks[6])
+                    
+                    f = 0.794
+                f = 1    
                 # if args.all_clients:
                 #     # w_locals[idx] = copy.deepcopy(w)
                 #     pass
                 # else:
                 w_locals.append(copy.deepcopy(w))
                 loss_locals.append(copy.deepcopy(loss))
+                
+                print("client accuracy", id, acc_test, loss)
+                # compute for fairness
+                #print(w_glob, w)
+                
+                
+                
+                keys = list(w.keys())
+                
+                grads = copy.deepcopy(w)
+                delta = copy.deepcopy(w)
+                
+                for k in keys:
+                    grads[k] = (w_glob[k] - w[k]) * 1.0 / args.lr
+                    #print("grads", grads)
+                    delta[k] = np.float_power(loss+1e-10, args.q) * grads[k] * (f**args.q)
+                    #print("delta", delta)
+#                    Deltas.append([np.float_power(loss+1e-10, args.q) * grad for grad in grads])
+#                    
+#                    hs[k] = args.q * np.float_power(loss+1e-10, (args.q-1)) * norm_grad(grads) + (1.0/args.lr) * np.float_power(loss+1e-10, args.q)
+                    
+                # estimation of the local Lipchitz constant
+                hs.append(args.q * np.float_power(loss+1e-10, (args.q-1)) * norm_grad(grads)  * (f**args.q) + (1.0/args.lr) * np.float_power(loss+1e-10, args.q)  * (f**args.q))
+                #print("hs", hs)
+                Deltas.append(delta)
+                #print("deltas", Deltas)
+                                
 
             # with open(txt_name, 'a+') as f:
             #     print(type_array, file=f)
             print(type_array)
             # FOR ITER
 
-            # update global weights
-            w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
+            # update global weights [1.59, 1.59, 1.59, 1.59, 1.19, 1.19, 1.19, 1.19, 0.794, 0.794] [0.794**args.q, 0.794**args.q, 0.794**args.q, 0.794**args.q, 1.19**args.q, 1.19**args.q, 1.19**args.q, 1.19**args.q, 1.59**args.q, 1.59**args.q]
+            w_glob = aggregate2(w_glob, hs, Deltas, [1] * 10)
+            #print(w_glob)
 
             # copy weight to net_glob
             net_glob.load_state_dict(w_glob)

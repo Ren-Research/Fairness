@@ -1,0 +1,303 @@
+config {'control': {'fed': '1', 'num_users': '100', 'frac': '0.05', 'data_split_mode': 'iid', 'model_split_mode': 'fix', 'model_mode': 'a2-e2', 'norm': 'bn', 'scale': '1', 'mask': '1'}, 'data_name': 'MNIST', 'subset': 'label', 'batch_size': {'train': 10, 'test': 50}, 'shuffle': {'train': True, 'test': False}, 'num_workers': 0, 'model_name': 'conv', 'metric_name': {'train': {'Local': ['Local-Loss', 'Local-Accuracy']}, 'test': {'Local': ['Local-Loss', 'Local-Accuracy'], 'Global': ['Global-Loss', 'Global-Accuracy']}}, 'optimizer_name': 'SGD', 'lr': 0.01, 'momentum': 0.9, 'weight_decay': 0.0005, 'scheduler_name': 'MultiStepLR', 'step_size': 1, 'milestones': [100], 'patience': 10, 'threshold': 0.001, 'factor': 0.1, 'min_lr': 0.0001, 'init_seed': 0, 'num_experiments': 1, 'num_epochs': {'global': 200, 'local': 5}, 'log_interval': 0.25, 'device': 'cpu', 'world_size': 1, 'resume_mode': 0, 'save_format': 'pdf', 'control_name': '1_100_0.05_iid_fix_a2-e2_bn_1_1', 'pivot_metric': 'Global-Accuracy', 'pivot': -inf, 'model_split_rate': {'a': 1, 'b': 0.5, 'c': 0.25, 'd': 0.125, 'e': 0.0625}, 'fed': 1, 'num_users': 100, 'frac': 0.05, 'data_split_mode': 'iid', 'model_split_mode': 'fix', 'model_mode': 'a2-e2', 'norm': 'bn', 'scale': True, 'mask': True, 'global_model_mode': 'a', 'global_model_rate': 1, 'model_rate': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625], 'conv': {'hidden_size': [64, 128, 256, 512]}, 'resnet': {'hidden_size': [64, 128, 256, 512]}, 'transformer': {'embedding_size': 256, 'num_heads': 8, 'hidden_size': 512, 'num_layers': 4, 'dropout': 0.2}, 'data_shape': [1, 28, 28]}
+Experiment: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1
+fetching data MNIST...
+data ready
+model Conv(
+  (blocks): Sequential(
+    (0): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): Scaler()
+    (2): BatchNorm2d(64, eps=1e-05, momentum=None, affine=True, track_running_stats=False)
+    (3): ReLU(inplace=True)
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (6): Scaler()
+    (7): BatchNorm2d(128, eps=1e-05, momentum=None, affine=True, track_running_stats=False)
+    (8): ReLU(inplace=True)
+    (9): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (10): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): Scaler()
+    (12): BatchNorm2d(256, eps=1e-05, momentum=None, affine=True, track_running_stats=False)
+    (13): ReLU(inplace=True)
+    (14): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (15): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (16): Scaler()
+    (17): BatchNorm2d(512, eps=1e-05, momentum=None, affine=True, track_running_stats=False)
+    (18): ReLU(inplace=True)
+    (19): AdaptiveAvgPool2d(output_size=1)
+    (20): Flatten(start_dim=1, end_dim=-1)
+    (21): Linear(in_features=512, out_features=10, bias=True)
+  )
+)
+label_split {0: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 1: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 2: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 3: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 5: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 6: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 7: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 8: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 9: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 10: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 11: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 12: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 13: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 14: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 15: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 16: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 17: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 18: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 19: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 20: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 21: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 22: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 23: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 24: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 25: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 26: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 27: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 28: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 29: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 30: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 31: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 32: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 33: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 34: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 35: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 36: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 37: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 38: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 39: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 40: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 41: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 42: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 43: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 44: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 45: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 46: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 47: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 48: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 49: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 50: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 51: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 52: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 53: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 54: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 55: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 56: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 57: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 58: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 59: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 60: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 61: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 62: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 63: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 64: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 65: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 66: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 67: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 68: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 69: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 70: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 71: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 72: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 73: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 74: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 75: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 76: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 77: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 78: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 79: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 80: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 81: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 82: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 83: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 84: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 85: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 86: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 87: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 88: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 89: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 90: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 91: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 92: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 93: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 94: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 95: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 96: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 97: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 98: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 99: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+user_idx [50, 25, 54, 74, 56]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+/usr/local/lib/python3.9/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  /Users/distiller/project/pytorch/aten/src/ATen/native/TensorShape.cpp:2228.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 1(0%)  Local-Loss: 1.3344  Local-Accuracy: 60.3333  ID: 50(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.719912  Experiment Finished Time: 0:36:17.719912
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 1(20%)  Local-Loss: 0.9918  Local-Accuracy: 72.2500  ID: 25(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:32.715285  Experiment Finished Time: 3:01:23.715285
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 1(40%)  Local-Loss: 1.1111  Local-Accuracy: 69.1556  ID: 54(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:15.979797  Experiment Finished Time: 2:12:45.979797
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 1(60%)  Local-Loss: 1.1803  Local-Accuracy: 66.4333  ID: 74(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.535335  Experiment Finished Time: 1:48:29.535335
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 1(80%)  Local-Loss: 1.2166  Local-Accuracy: 65.0800  ID: 56(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 1:33:51
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 1(100%)  Local-Loss: 0.1687  Local-Accuracy: 95.3400  Global-Loss: 0.1687  Global-Accuracy: 95.3400
+/usr/local/lib/python3.9/site-packages/torch/optim/lr_scheduler.py:131: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn("Detected call of `lr_scheduler.step()` before `optimizer.step()`. "
+user_idx [9, 93, 24, 55, 86]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 2(0%)  Local-Loss: 0.1197  Local-Accuracy: 96.8667  ID: 9(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:18.125752  Experiment Finished Time: 5:23:34.125752
+loss 90.1244804263115
+hs [33901.40702700615]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 2(20%)  Local-Loss: 0.3936  Local-Accuracy: 92.0333  ID: 93(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:32.662346  Experiment Finished Time: 3:00:11.662346
+loss 355.65584897994995
+hs [33901.40702700615, 78017.967710495]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 2(40%)  Local-Loss: 0.3077  Local-Accuracy: 93.5000  ID: 24(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:27.736574  Experiment Finished Time: 3:49:17.736574
+loss 86.80573105812073
+hs [33901.40702700615, 78017.967710495, 32162.491074562073]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 2(60%)  Local-Loss: 0.4062  Local-Accuracy: 91.4583  ID: 55(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:10.956802  Experiment Finished Time: 3:00:57.956802
+loss 351.5304923057556
+hs [33901.40702700615, 78017.967710495, 32162.491074562073, 74665.57266807556]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 2(80%)  Local-Loss: 0.4672  Local-Accuracy: 90.3400  ID: 86(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 2:31:54
+loss 651.3663530349731
+hs [33901.40702700615, 78017.967710495, 32162.491074562073, 74665.57266807556, 107088.84624099731]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 2(100%)  Local-Loss: 0.1556  Local-Accuracy: 95.5800  Global-Loss: 0.1556  Global-Accuracy: 95.5800
+user_idx [50, 95, 40, 80, 90]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 3(0%)  Local-Loss: 0.4669  Local-Accuracy: 92.0333  ID: 50(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.727653  Experiment Finished Time: 0:35:57.727653
+loss 228.56442630290985
+hs [53541.477786540985]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 3(20%)  Local-Loss: 0.4922  Local-Accuracy: 91.1500  ID: 95(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.518877  Experiment Finished Time: 0:35:46.518877
+loss 142.22115278244019
+hs [53541.477786540985, 44461.00199699402]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 3(40%)  Local-Loss: 0.3656  Local-Accuracy: 93.1444  ID: 40(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:16.008757  Experiment Finished Time: 2:11:40.008757
+loss 50.88825151324272
+hs [53541.477786540985, 44461.00199699402, 27593.219682574272]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 3(60%)  Local-Loss: 0.4021  Local-Accuracy: 92.7333  ID: 80(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.559009  Experiment Finished Time: 1:47:47.559009
+loss 215.73969721794128
+hs [53541.477786540985, 44461.00199699402, 27593.219682574272, 51622.01269054413]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 3(80%)  Local-Loss: 0.4240  Local-Accuracy: 92.3933  ID: 90(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 1:33:20
+loss 377.3118853569031
+hs [53541.477786540985, 44461.00199699402, 27593.219682574272, 51622.01269054413, 67885.47369194031]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 3(100%)  Local-Loss: 0.1521  Local-Accuracy: 95.5800  Global-Loss: 0.1521  Global-Accuracy: 95.5800
+user_idx [54, 95, 56, 64, 89]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 4(0%)  Local-Loss: 0.4127  Local-Accuracy: 92.2333  ID: 54(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.825512  Experiment Finished Time: 0:36:10.825512
+loss 202.15129852294922
+hs [42753.17672729492]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 4(20%)  Local-Loss: 0.4145  Local-Accuracy: 91.8333  ID: 95(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.587425  Experiment Finished Time: 0:35:58.587425
+loss 352.31226682662964
+hs [42753.17672729492, 58003.416135787964]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 4(40%)  Local-Loss: 0.4180  Local-Accuracy: 91.6222  ID: 56(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:04.386363  Experiment Finished Time: 0:35:53.386363
+loss 130.12227416038513
+hs [42753.17672729492, 58003.416135787964, 34961.94616603851]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 4(60%)  Local-Loss: 0.4138  Local-Accuracy: 91.9000  ID: 64(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:02.192019  Experiment Finished Time: 0:35:50.192019
+loss 98.7025573849678
+hs [42753.17672729492, 58003.416135787964, 34961.94616603851, 32140.79284787178]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 4(80%)  Local-Loss: 0.4116  Local-Accuracy: 92.0133  ID: 89(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 0:35:49
+loss 131.93540275096893
+hs [42753.17672729492, 58003.416135787964, 34961.94616603851, 32140.79284787178, 36003.66722822189]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 4(100%)  Local-Loss: 0.1541  Local-Accuracy: 95.5400  Global-Loss: 0.1541  Global-Accuracy: 95.5400
+user_idx [92, 74, 49, 65, 29]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 5(0%)  Local-Loss: 0.3467  Local-Accuracy: 92.4000  ID: 92(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.665028  Experiment Finished Time: 0:35:20.665028
+loss 187.80390918254852
+hs [37026.35576200485]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 5(20%)  Local-Loss: 0.3285  Local-Accuracy: 93.0500  ID: 74(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.542418  Experiment Finished Time: 0:35:32.542418
+loss 208.73793959617615
+hs [37026.35576200485, 39926.354506492615]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 5(40%)  Local-Loss: 0.2573  Local-Accuracy: 94.4111  ID: 49(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:16.229198  Experiment Finished Time: 2:12:08.229198
+loss 561.2995624542236
+hs [37026.35576200485, 39926.354506492615, 77697.33905792236]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 5(60%)  Local-Loss: 0.2860  Local-Accuracy: 93.7083  ID: 65(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.643795  Experiment Finished Time: 1:48:04.643795
+loss 191.79077446460724
+hs [37026.35576200485, 39926.354506492615, 77697.33905792236, 36840.397758960724]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 5(80%)  Local-Loss: 0.2519  Local-Accuracy: 94.3733  ID: 29(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 2:30:14
+loss 7.469299249351025
+hs [37026.35576200485, 39926.354506492615, 77697.33905792236, 36840.397758960724, 22517.301018685102]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 5(100%)  Local-Loss: 0.1139  Local-Accuracy: 96.5200  Global-Loss: 0.1139  Global-Accuracy: 96.5200
+user_idx [14, 46, 87, 9, 84]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 6(0%)  Local-Loss: 0.0721  Local-Accuracy: 98.1333  ID: 14(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:18.958892  Experiment Finished Time: 5:20:26.958892
+loss 7.9796407371759415
+hs [19215.606651842594]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 6(20%)  Local-Loss: 0.0814  Local-Accuracy: 97.7667  ID: 46(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:59.560495  Experiment Finished Time: 5:21:57.560495
+loss 16.97631925344467
+hs [19215.606651842594, 20527.653409719467]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 6(40%)  Local-Loss: 0.1597  Local-Accuracy: 96.0444  ID: 87(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:27.961825  Experiment Finished Time: 3:46:28.961825
+loss 144.55126225948334
+hs [19215.606651842594, 20527.653409719467, 31092.973882198334]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 6(60%)  Local-Loss: 0.1421  Local-Accuracy: 96.4917  ID: 9(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:15.508565  Experiment Finished Time: 4:10:58.508565
+loss 5.368472542613745
+hs [19215.606651842594, 20527.653409719467, 31092.973882198334, 20081.046473011374]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 6(80%)  Local-Loss: 0.1798  Local-Accuracy: 95.6533  ID: 84(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 3:27:48
+loss 558.982789516449
+hs [19215.606651842594, 20527.653409719467, 31092.973882198334, 20081.046473011374, 72436.0465297699]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 6(100%)  Local-Loss: 0.1129  Local-Accuracy: 96.4600  Global-Loss: 0.1129  Global-Accuracy: 96.4600
+user_idx [78, 0, 68, 12, 90]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 7(0%)  Local-Loss: 0.2715  Local-Accuracy: 93.3000  ID: 78(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.748572  Experiment Finished Time: 0:35:19.748572
+loss 353.94519567489624
+hs [50430.072301864624]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 7(20%)  Local-Loss: 0.1763  Local-Accuracy: 95.4833  ID: 0(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:32.264428  Experiment Finished Time: 2:53:30.264428
+loss 35.57373210787773
+hs [50430.072301864624, 21516.386882662773]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 7(40%)  Local-Loss: 0.2086  Local-Accuracy: 94.9889  ID: 68(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:15.812017  Experiment Finished Time: 2:07:24.812017
+loss 644.6777582168579
+hs [50430.072301864624, 21516.386882662773, 80257.13129043579]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 7(60%)  Local-Loss: 0.1872  Local-Accuracy: 95.3583  ID: 12(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:10.764594  Experiment Finished Time: 2:53:18.764594
+loss 18.297160044312477
+hs [50430.072301864624, 21516.386882662773, 80257.13129043579, 21451.606629431248]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 7(80%)  Local-Loss: 0.2067  Local-Accuracy: 94.9533  ID: 90(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 2:25:42
+loss 35.93676909804344
+hs [50430.072301864624, 21516.386882662773, 80257.13129043579, 21451.606629431248, 18784.344878554344]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 7(100%)  Local-Loss: 0.1115  Local-Accuracy: 96.5400  Global-Loss: 0.1115  Global-Accuracy: 96.5400
+user_idx [37, 3, 96, 35, 65]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 8(0%)  Local-Loss: 0.1222  Local-Accuracy: 96.2000  ID: 37(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:17.251077  Experiment Finished Time: 5:10:17.251077
+loss 16.636962071061134
+hs [21287.524332106113]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 8(20%)  Local-Loss: 0.0963  Local-Accuracy: 97.1500  ID: 3(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:58.028160  Experiment Finished Time: 5:10:27.028160
+loss 4.4215163215994835
+hs [21287.524332106113, 17880.31764778495]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 8(40%)  Local-Loss: 0.1440  Local-Accuracy: 96.2889  ID: 96(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:27.272302  Experiment Finished Time: 3:38:38.272302
+loss 236.6715669631958
+hs [21287.524332106113, 17880.31764778495, 37290.23970413208]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 8(60%)  Local-Loss: 0.1320  Local-Accuracy: 96.6333  ID: 35(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:15.049691  Experiment Finished Time: 4:01:03.049691
+loss 13.27667385339737
+hs [21287.524332106113, 17880.31764778495, 37290.23970413208, 20416.563869714737]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 8(80%)  Local-Loss: 0.1599  Local-Accuracy: 95.9867  ID: 65(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 3:19:49
+loss 34.925829619169235
+hs [21287.524332106113, 17880.31764778495, 37290.23970413208, 20416.563869714737, 16866.457961916924]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 8(100%)  Local-Loss: 0.1093  Local-Accuracy: 96.5800  Global-Loss: 0.1093  Global-Accuracy: 96.5800
+user_idx [68, 28, 9, 15, 84]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 9(0%)  Local-Loss: 0.2092  Local-Accuracy: 95.0667  ID: 68(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.767735  Experiment Finished Time: 0:35:01.767735
+loss 92.80931949615479
+hs [21825.32550430298]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 9(20%)  Local-Loss: 0.1489  Local-Accuracy: 96.2333  ID: 28(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:32.236251  Experiment Finished Time: 2:51:34.236251
+loss 1.3440705370157957
+hs [21825.32550430298, 17823.19220995158]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 9(40%)  Local-Loss: 0.1305  Local-Accuracy: 96.5556  ID: 9(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:27.248871  Experiment Finished Time: 3:37:18.248871
+loss 18.025215715169907
+hs [21825.32550430298, 17823.19220995158, 20394.31649339199]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 9(60%)  Local-Loss: 0.1153  Local-Accuracy: 96.9500  ID: 15(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:15.066564  Experiment Finished Time: 4:00:04.066564
+loss 2.508161123842001
+hs [21825.32550430298, 17823.19220995158, 20394.31649339199, 17156.5797842592]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 9(80%)  Local-Loss: 0.1333  Local-Accuracy: 96.8067  ID: 84(5/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:00  Experiment Finished Time: 3:18:56
+loss 286.0387861728668
+hs [21825.32550430298, 17823.19220995158, 20394.31649339199, 17156.5797842592, 41230.96748447418]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 9(100%)  Local-Loss: 0.1083  Local-Accuracy: 96.6800  Global-Loss: 0.1083  Global-Accuracy: 96.6800
+user_idx [6, 17, 36, 88, 32]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 10(0%)  Local-Loss: 0.0753  Local-Accuracy: 97.9333  ID: 6(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:17.233968  Experiment Finished Time: 5:07:00.233968
+loss 0.7054422167129815
+hs [16550.723909171298]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 10(20%)  Local-Loss: 0.0785  Local-Accuracy: 97.6833  ID: 17(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:57.980097  Experiment Finished Time: 5:06:57.980097
+loss 10.91969944536686
+hs [16550.723909171298, 17994.737522661686]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 10(40%)  Local-Loss: 0.0926  Local-Accuracy: 97.2889  ID: 36(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:38.659731  Experiment Finished Time: 5:06:41.659731
+loss 19.96757835149765
+hs [16550.723909171298, 17994.737522661686, 21911.917991399765]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 10(60%)  Local-Loss: 0.1256  Local-Accuracy: 96.6417  ID: 88(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:15.054452  Experiment Finished Time: 3:58:37.054452
+loss 198.6476480960846
+hs [16550.723909171298, 17994.737522661686, 21911.917991399765, 33050.37809085846]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 10(80%)  Local-Loss: 0.1206  Local-Accuracy: 96.7133  ID: 32(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 4:12:01
+loss 91.60201251506805
+hs [16550.723909171298, 17994.737522661686, 21911.917991399765, 33050.37809085846, 27234.619220256805]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 10(100%)  Local-Loss: 0.0989  Local-Accuracy: 97.0900  Global-Loss: 0.0989  Global-Accuracy: 97.0900
+user_idx [84, 24, 0, 86, 33]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 11(0%)  Local-Loss: 0.1775  Local-Accuracy: 95.6000  ID: 84(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.885696  Experiment Finished Time: 0:35:07.885696
+loss 96.8783050775528
+hs [21055.36957025528]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 11(20%)  Local-Loss: 0.1328  Local-Accuracy: 96.6500  ID: 24(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:32.741375  Experiment Finished Time: 2:52:26.741375
+loss 5.2125109359622
+hs [21055.36957025528, 17633.25695297122]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 11(40%)  Local-Loss: 0.1181  Local-Accuracy: 96.9556  ID: 0(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:28.018146  Experiment Finished Time: 3:41:07.018146
+loss 47.773171216249466
+hs [21055.36957025528, 17633.25695297122, 20898.065168499947]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 11(60%)  Local-Loss: 0.1488  Local-Accuracy: 96.1917  ID: 86(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:11.074609  Experiment Finished Time: 2:54:37.074609
+loss 30.24395927786827
+hs [21055.36957025528, 17633.25695297122, 20898.065168499947, 15682.395927786827]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 11(80%)  Local-Loss: 0.1364  Local-Accuracy: 96.4200  ID: 33(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 3:26:19
+loss 1.1986731551587582
+hs [21055.36957025528, 17633.25695297122, 20898.065168499947, 15682.395927786827, 17060.412237390876]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 11(100%)  Local-Loss: 0.0948  Local-Accuracy: 97.2200  Global-Loss: 0.0948  Global-Accuracy: 97.2200
+user_idx [25, 46, 29, 1, 6]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 12(0%)  Local-Loss: 0.0302  Local-Accuracy: 99.2667  ID: 25(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:18.454697  Experiment Finished Time: 5:08:35.454697
+loss 6.3184574246406555
+hs [10849.912148714066]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 12(20%)  Local-Loss: 0.0562  Local-Accuracy: 98.4167  ID: 46(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:59.243304  Experiment Finished Time: 5:10:22.243304
+loss 11.956119909882545
+hs [10849.912148714066, 17251.087576925755]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 12(40%)  Local-Loss: 0.0686  Local-Accuracy: 98.1444  ID: 29(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:39.531026  Experiment Finished Time: 5:10:19.531026
+loss 25.68475529551506
+hs [10849.912148714066, 17251.087576925755, 19645.539982676506]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 12(60%)  Local-Loss: 0.0697  Local-Accuracy: 98.1083  ID: 1(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:19.820535  Experiment Finished Time: 5:10:50.820535
+loss 53.3861517906189
+hs [10849.912148714066, 17251.087576925755, 19645.539982676506, 21509.63568687439]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 12(80%)  Local-Loss: 0.0702  Local-Accuracy: 98.0800  ID: 6(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 5:10:29
+loss 13.86347133666277
+hs [10849.912148714066, 17251.087576925755, 19645.539982676506, 21509.63568687439, 16738.270961791277]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 12(100%)  Local-Loss: 0.0902  Local-Accuracy: 97.3700  Global-Loss: 0.0902  Global-Accuracy: 97.3700
+user_idx [37, 89, 45, 94, 28]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 13(0%)  Local-Loss: 0.1044  Local-Accuracy: 97.0333  ID: 37(1/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:01:19.602776  Experiment Finished Time: 5:11:26.602776
+loss 51.94849893450737
+hs [22599.258096575737]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 13(20%)  Local-Loss: 0.1529  Local-Accuracy: 96.1167  ID: 89(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:33.200801  Experiment Finished Time: 2:53:01.200801
+loss 101.84315592050552
+hs [22599.258096575737, 22378.753092050552]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 13(40%)  Local-Loss: 0.1301  Local-Accuracy: 96.6889  ID: 45(3/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:27.687533  Experiment Finished Time: 3:36:11.687533
+loss 7.47333187609911
+hs [22599.258096575737, 22378.753092050552, 17340.46795323491]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 13(60%)  Local-Loss: 0.1524  Local-Accuracy: 96.1083  ID: 94(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:10.940042  Experiment Finished Time: 2:50:39.940042
+loss 176.93191766738892
+hs [22599.258096575737, 22378.753092050552, 17340.46795323491, 30553.65563392639]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 13(80%)  Local-Loss: 0.1392  Local-Accuracy: 96.4333  ID: 28(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 3:21:51
+loss 3.1031793914735317
+hs [22599.258096575737, 22378.753092050552, 17340.46795323491, 30553.65563392639, 16634.082587584853]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 13(100%)  Local-Loss: 0.0886  Local-Accuracy: 97.3900  Global-Loss: 0.0886  Global-Accuracy: 97.3900
+user_idx [70, 13, 95, 54, 41]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 14(0%)  Local-Loss: 0.1892  Local-Accuracy: 95.3667  ID: 70(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:10.021907  Experiment Finished Time: 0:39:00.021907
+loss 196.81261479854584
+hs [32246.077886104584]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 14(20%)  Local-Loss: 0.1390  Local-Accuracy: 96.2167  ID: 13(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:34.102905  Experiment Finished Time: 2:56:46.102905
+loss 4.2161596938967705
+hs [32246.077886104584, 16475.515383452177]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 14(40%)  Local-Loss: 0.1628  Local-Accuracy: 95.6556  ID: 95(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:16.643772  Experiment Finished Time: 2:09:15.643772
+loss 324.1453766822815
+hs [32246.077886104584, 16475.515383452177, 45176.65876197815]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 14(60%)  Local-Loss: 0.1751  Local-Accuracy: 95.3167  ID: 54(4/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.791982  Experiment Finished Time: 1:45:23.791982
+loss 73.39664548635483
+hs [32246.077886104584, 16475.515383452177, 45176.65876197815, 19494.570798635483]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 14(80%)  Local-Loss: 0.1538  Local-Accuracy: 95.8933  ID: 41(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 2:25:21
+loss 2.4426868185400963
+hs [32246.077886104584, 16475.515383452177, 45176.65876197815, 19494.570798635483, 15644.56653341651]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 14(100%)  Local-Loss: 0.0889  Local-Accuracy: 97.4200  Global-Loss: 0.0889  Global-Accuracy: 97.4200
+user_idx [62, 80, 82, 24, 22]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 15(0%)  Local-Loss: 0.1885  Local-Accuracy: 94.9333  ID: 62(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:09.090432  Experiment Finished Time: 0:35:11.090432
+loss 64.16807323694229
+hs [18667.93818306923]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 15(20%)  Local-Loss: 0.1887  Local-Accuracy: 95.1500  ID: 80(2/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:06.774870  Experiment Finished Time: 0:34:55.774870
+loss 30.475903302431107
+hs [18667.93818306923, 15071.19189274311]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 15(40%)  Local-Loss: 0.2025  Local-Accuracy: 94.7333  ID: 82(3/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:04.487662  Experiment Finished Time: 0:34:40.487662
+loss 69.61014866828918
+hs [18667.93818306923, 15071.19189274311, 18840.65060901642]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 15(60%)  Local-Loss: 0.1716  Local-Accuracy: 95.5417  ID: 24(4/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:06.647963  Experiment Finished Time: 1:42:35.647963
+loss 153.37374806404114
+hs [18667.93818306923, 15071.19189274311, 18840.65060901642, 30860.375782966614]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 15(80%)  Local-Loss: 0.1547  Local-Accuracy: 95.9133  ID: 22(5/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:00  Experiment Finished Time: 2:25:33
+loss 30.88606894016266
+hs [18667.93818306923, 15071.19189274311, 18840.65060901642, 30860.375782966614, 19311.947714328766]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Test Epoch: 15(100%)  Local-Loss: 0.0816  Local-Accuracy: 97.6300  Global-Loss: 0.0816  Global-Accuracy: 97.6300
+user_idx [90, 32, 4, 3, 27]
+output_weight_name blocks.21.weight output_bias_name blocks.21.bias
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 16(0%)  Local-Loss: 0.2112  Local-Accuracy: 94.5667  ID: 90(1/5)  Learning rate: 0.01  Rate: 0.0625  Epoch Finished Time: 0:00:08.750208  Experiment Finished Time: 0:33:41.750208
+loss 60.386426746845245
+hs [17947.490330934525]
+Model: 0_MNIST_label_conv_1_100_0.05_iid_fix_a2-e2_bn_1_1  Train Epoch: 16(20%)  Local-Loss: 0.1395  Local-Accuracy: 96.3000  ID: 32(2/5)  Learning rate: 0.01  Rate: 1.0  Epoch Finished Time: 0:00:32.878482  Experiment Finished Time: 2:48:35.878482
+loss 24.962052702903748
+hs [17947.490330934525, 17373.314645290375]

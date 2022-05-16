@@ -1,0 +1,176 @@
+TRound  -1, Testing loss 2.388
+ARound  -1, Testing accuracy: 6.25
+Round   0, Average loss 0.824
+TRound   0, Testing loss 0.438
+ARound   0, Testing accuracy: 87.56
+Training accuracy: 86.98
+Testing accuracy: 87.56
+TRound  -1, Testing loss 2.370
+ARound  -1, Testing accuracy: 9.03
+Round   0, Average loss 0.796
+TRound   0, Testing loss 0.426
+ARound   0, Testing accuracy: 88.06
+Training accuracy: 87.22
+Testing accuracy: 88.06
+TRound  -1, Testing loss 2.316
+ARound  -1, Testing accuracy: 10.20
+Round   0, Average loss 0.774
+TRound   0, Testing loss 0.428
+ARound   0, Testing accuracy: 88.67
+Training accuracy: 88.09
+Testing accuracy: 88.67
+TRound  -1, Testing loss 2.337
+ARound  -1, Testing accuracy: 8.19
+Round   0, Average loss 0.799
+TRound   0, Testing loss 0.428
+ARound   0, Testing accuracy: 88.75
+Training accuracy: 88.00
+Testing accuracy: 88.75
+TRound  -1, Testing loss 2.315
+ARound  -1, Testing accuracy: 13.16
+Round   0, Average loss 0.801
+TRound   0, Testing loss 0.434
+ARound   0, Testing accuracy: 88.56
+Training accuracy: 87.88
+Testing accuracy: 88.56
+TRound  -1, Testing loss 2.345
+ARound  -1, Testing accuracy: 13.38
+Round   0, Average loss 0.800
+TRound   0, Testing loss 0.504
+ARound   0, Testing accuracy: 88.65
+Training accuracy: 88.17
+Testing accuracy: 88.65
+TRound  -1, Testing loss 2.343
+ARound  -1, Testing accuracy: 11.26
+Round   0, Average loss 0.806
+TRound   0, Testing loss 0.440
+ARound   0, Testing accuracy: 88.16
+Training accuracy: 87.92
+Testing accuracy: 88.16
+TRound  -1, Testing loss 2.352
+ARound  -1, Testing accuracy: 9.41
+Round   0, Average loss 0.785
+TRound   0, Testing loss 0.505
+ARound   0, Testing accuracy: 88.32
+Training accuracy: 87.70
+Testing accuracy: 88.32
+TRound  -1, Testing loss 2.312
+ARound  -1, Testing accuracy: 6.68
+Round   0, Average loss 0.786
+TRound   0, Testing loss 0.427
+ARound   0, Testing accuracy: 88.73
+Training accuracy: 88.21
+Testing accuracy: 88.73
+TRound  -1, Testing loss 2.319
+ARound  -1, Testing accuracy: 10.14
+TRound  -1, Testing loss 2.323
+ARound  -1, Testing accuracy: 15.54
+TRound  -1, Testing loss 2.309
+ARound  -1, Testing accuracy: 11.85
+TRound  -1, Testing loss 2.363
+ARound  -1, Testing accuracy: 12.92
+TRound  -1, Testing loss 2.302
+ARound  -1, Testing accuracy: 12.71
+TRound  -1, Testing loss 2.353
+ARound  -1, Testing accuracy: 11.64
+TRound  -1, Testing loss 2.311
+ARound  -1, Testing accuracy: 10.57
+TRound  -1, Testing loss 2.348
+ARound  -1, Testing accuracy: 6.20
+TRound  -1, Testing loss 2.329
+ARound  -1, Testing accuracy: 10.33
+TRound  -1, Testing loss 2.346
+ARound  -1, Testing accuracy: 9.84
+TRound  -1, Testing loss 2.287
+ARound  -1, Testing accuracy: 10.68
+TRound  -1, Testing loss 2.307
+ARound  -1, Testing accuracy: 11.27
+TRound  -1, Testing loss 2.283
+ARound  -1, Testing accuracy: 11.14
+TRound  -1, Testing loss 2.314
+ARound  -1, Testing accuracy: 8.56
+TRound  -1, Testing loss 2.354
+ARound  -1, Testing accuracy: 8.85
+TRound  -1, Testing loss 2.317
+ARound  -1, Testing accuracy: 12.37
+TRound  -1, Testing loss 2.358
+ARound  -1, Testing accuracy: 6.98
+TRound  -1, Testing loss 2.342
+ARound  -1, Testing accuracy: 7.80
+TRound  -1, Testing loss 2.304
+ARound  -1, Testing accuracy: 13.52
+TRound  -1, Testing loss 2.313
+ARound  -1, Testing accuracy: 9.07
+TRound  -1, Testing loss 2.324
+ARound  -1, Testing accuracy: 11.13
+TRound  -1, Testing loss 2.311
+ARound  -1, Testing accuracy: 11.23
+TRound  -1, Testing loss 2.309
+ARound  -1, Testing accuracy: 9.59
+TRound  -1, Testing loss 2.324
+ARound  -1, Testing accuracy: 8.43
+TRound  -1, Testing loss 2.308
+ARound  -1, Testing accuracy: 11.13
+TRound  -1, Testing loss 2.286
+ARound  -1, Testing accuracy: 11.42
+TRound  -1, Testing loss 2.345
+ARound  -1, Testing accuracy: 7.48
+TRound  -1, Testing loss 2.341
+ARound  -1, Testing accuracy: 8.40
+TRound  -1, Testing loss 2.340
+ARound  -1, Testing accuracy: 12.68
+TRound  -1, Testing loss 2.354
+ARound  -1, Testing accuracy: 8.25
+TRound  -1, Testing loss 2.358
+ARound  -1, Testing accuracy: 4.91
+TRound  -1, Testing loss 2.340
+ARound  -1, Testing accuracy: 7.48
+TRound  -1, Testing loss 2.343
+ARound  -1, Testing accuracy: 6.09
+TRound  -1, Testing loss 2.269
+ARound  -1, Testing accuracy: 15.55
+TRound  -1, Testing loss 2.333
+ARound  -1, Testing accuracy: 7.34
+TRound  -1, Testing loss 2.333
+ARound  -1, Testing accuracy: 13.38
+TRound  -1, Testing loss 2.309
+ARound  -1, Testing accuracy: 12.71
+TRound  -1, Testing loss 2.298
+ARound  -1, Testing accuracy: 13.90
+TRound  -1, Testing loss 2.302
+ARound  -1, Testing accuracy: 15.20
+TRound  -1, Testing loss 2.335
+ARound  -1, Testing accuracy: 10.46
+TRound  -1, Testing loss 2.309
+ARound  -1, Testing accuracy: 12.32
+TRound  -1, Testing loss 2.304
+ARound  -1, Testing accuracy: 11.59
+TRound  -1, Testing loss 2.330
+ARound  -1, Testing accuracy: 11.17
+TRound  -1, Testing loss 2.320
+ARound  -1, Testing accuracy: 10.18
+TRound  -1, Testing loss 2.332
+ARound  -1, Testing accuracy: 11.58
+TRound  -1, Testing loss 2.347
+ARound  -1, Testing accuracy: 5.74
+TRound  -1, Testing loss 2.329
+ARound  -1, Testing accuracy: 8.62
+TRound  -1, Testing loss 2.303
+ARound  -1, Testing accuracy: 10.33
+Round   0, Average loss 0.798
+TRound   0, Testing loss 2.303
+ARound   0, Testing accuracy: 10.35
+Training accuracy: 10.33
+Testing accuracy: 10.35
+TRound  -1, Testing loss 2.325
+ARound  -1, Testing accuracy: 8.84
+Round   0, Average loss 0.779
+TRound   0, Testing loss 2.324
+ARound   0, Testing accuracy: 8.87
+TRound  -1, Testing loss 2.347
+ARound  -1, Testing accuracy: 8.12
+Round   0, Average loss 0.800
+TRound   0, Testing loss 2.347
+ARound   0, Testing accuracy: 8.16
+Training accuracy: 8.66
+Testing accuracy: 8.16

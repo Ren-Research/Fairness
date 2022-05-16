@@ -1,0 +1,8 @@
+TRound  -1, Testing loss 2.326
+ARound  -1, Testing accuracy: 11.33
+Round   0, Average loss 0.122
+TRound   0, Testing loss 2.080
+ARound   0, Testing accuracy: 31.15
+Round   1, Average loss 0.091
+TRound   1, Testing loss 1.886
+ARound   1, Testing accuracy: 35.71
