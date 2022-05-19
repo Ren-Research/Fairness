@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from torch.utils.tensorboard import SummaryWriter
 from numbers import Number
 from utils import ntuple
+#import copy
 
 
 class Logger():
@@ -81,7 +82,7 @@ class Logger():
         if self.writer is not None:
             self.iterator[info_name] += 1
             self.writer.add_text(info_name, info, self.iterator[info_name])
-        return
+        return info
 
     def flush(self):
         self.writer.flush()
