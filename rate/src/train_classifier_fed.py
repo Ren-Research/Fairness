@@ -8,6 +8,9 @@ import shutil
 import time
 import torch
 import torch.backends.cudnn as cudnn
+from torch import nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 from collections import OrderedDict
 from config import cfg
 from data import fetch_dataset, make_data_loader, split_dataset, SplitDataset
@@ -78,11 +81,11 @@ def runExperiment():
     for epoch in range(last_epoch, cfg['num_epochs']['global'] + 1):
         logger.safe(True)
         if epoch == 1:
-            train(dataset['train'], data_split['train'], label_split, federation, model, optimizer, logger, epoch, first=True)
+            train(dataset['train'], data_split['train'], label_split, federation, model, optimizer, logger, epoch, first=True, test_dataset=dataset['test'], test_data_split=data_split['test'])
         else:
-            train(dataset['train'], data_split['train'], label_split, federation, model, optimizer, logger, epoch, first=False)
+            train(dataset['train'], data_split['train'], label_split, federation, model, optimizer, logger, epoch, first=False, test_dataset=dataset['test'], test_data_split=data_split['test'])
         test_model = stats(dataset['train'], model)
-        test(dataset['test'], data_split['test'], label_split, test_model, logger, epoch)
+        test(dataset['test'], data_split['test'], label_split, test_model, logger, epoch, final=True)
         if cfg['scheduler_name'] == 'ReduceLROnPlateau':
             scheduler.step(metrics=logger.mean['train/{}'.format(cfg['pivot_metric'])])
         else:
@@ -121,7 +124,7 @@ def norm_grad(grad_list):
   
 
 
-def train(dataset, data_split, label_split, federation, global_model, optimizer, logger, epoch, first=False):
+def train(dataset, data_split, label_split, federation, global_model, optimizer, logger, epoch, first=False, test_dataset=None, test_data_split=None):
     global_model.load_state_dict(federation.global_parameters)
     global_model.train(True)
     local, local_parameters, user_idx, param_idx = make_local(dataset, data_split, label_split, federation)
@@ -132,7 +135,7 @@ def train(dataset, data_split, label_split, federation, global_model, optimizer,
     hs = []
     Deltas = []
     for m in range(num_active_users):
-        param, evaluation = local[m].train(local_parameters[m], lr, logger)
+        param, evaluation, local_model = local[m].train(local_parameters[m], lr, logger)
         local_parameters[m] = copy.deepcopy(param)
         #local_parameters[m] = copy.deepcopy(local[m].train(local_parameters[m], lr, logger))
         if True:
@@ -151,9 +154,15 @@ def train(dataset, data_split, label_split, federation, global_model, optimizer,
             logger.append(info, 'train', mean=False)
             logger.write('train', cfg['metric_name']['train']['Local'])
             
+        print("Test on global testing dataset")
+        #test_model = stats(dataset, local_model)
+        loss, accuracy = test(test_dataset, test_data_split, label_split, local_model, logger, epoch)
+        #test_img(local_model, test_dataset)
+            
         if not first:    
             # for fairness
-            loss = evaluation["Local-Loss"] * 1000
+            #loss = evaluation["Local-Loss"] * 1000
+            loss *= 1000
             print("loss", loss)
             #f = federation.model_rate[user_idx[m]]
             f = 1
@@ -211,22 +220,25 @@ def stats(dataset, model):
     return test_model
 
 
-def test(dataset, data_split, label_split, model, logger, epoch):
+def test(dataset, data_split, label_split, model, logger, epoch, final=False):
+    #print(model)
     with torch.no_grad():
         metric = Metric()
         model.train(False)
-        for m in range(cfg['num_users']):
-            data_loader = make_data_loader({'test': SplitDataset(dataset, data_split[m])})['test']
-            for i, input in enumerate(data_loader):
-                input = collate(input)
-                input_size = input['img'].size(0)
-                input['label_split'] = torch.tensor(label_split[m])
-                input = to_device(input, cfg['device'])
-                output = model(input)
-                output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
-                evaluation = metric.evaluate(cfg['metric_name']['test']['Local'], input, output)
-                logger.append(evaluation, 'test', input_size)
+        if final:
+            for m in range(cfg['num_users']):
+                data_loader = make_data_loader({'test': SplitDataset(dataset, data_split[m])})['test']
+                for i, input in enumerate(data_loader):
+                    input = collate(input)
+                    input_size = input['img'].size(0)
+                    input['label_split'] = torch.tensor(label_split[m])
+                    input = to_device(input, cfg['device'])
+                    output = model(input)
+                    output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
+                    evaluation = metric.evaluate(cfg['metric_name']['test']['Local'], input, output)
+                    logger.append(evaluation, 'test', input_size)
         data_loader = make_data_loader({'test': dataset})['test']
+        #print("len(data_loader)", len(data_loader))
         for i, input in enumerate(data_loader):
             input = collate(input)
             input_size = input['img'].size(0)
@@ -235,11 +247,19 @@ def test(dataset, data_split, label_split, model, logger, epoch):
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
             evaluation = metric.evaluate(cfg['metric_name']['test']['Global'], input, output)
             logger.append(evaluation, 'test', input_size)
-        info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                         'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+  
+        if final:
+            info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                              'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+        else:
+            info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                              'Train Epoch: {}({:.0f}%)'.format(epoch, 100.), "Local Test"]}
         logger.append(info, 'test', mean=False)
-        logger.write('test', cfg['metric_name']['test']['Local'] + cfg['metric_name']['test']['Global'])
-    return
+        info = logger.write('test', cfg['metric_name']['test']['Local'] + cfg['metric_name']['test']['Global'])
+        loss = float(info.split("Global-Loss:")[1].split("Global-Accuracy:")[0])
+        accuracy = float(info.split("Global-Accuracy:")[1].split("Local Test")[0])
+        
+    return loss, accuracy
 
 
 def make_local(dataset, data_split, label_split, federation):
@@ -261,6 +281,7 @@ class Local:
         self.model_rate = model_rate
         self.data_loader = data_loader
         self.label_split = label_split
+        #print("len(data_loader) local", len(data_loader))
 
     def train(self, local_parameters, lr, logger):
         metric = Metric()
@@ -281,10 +302,10 @@ class Local:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
                 optimizer.step()
                 evaluation = metric.evaluate(cfg['metric_name']['train']['Local'], input, output)
-                #print("evaluation", evaluation)
                 logger.append(evaluation, 'train', n=input_size)
+            #print(evaluation)
         local_parameters = model.state_dict()
-        return local_parameters, evaluation
+        return local_parameters, evaluation, model
 
 
 if __name__ == "__main__":
