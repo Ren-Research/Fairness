@@ -157,11 +157,12 @@ def train(dataset, data_split, label_split, federation, global_model, optimizer,
             loss = float(info.split("Local-Loss:")[1].split("Local-Accuracy:")[0])
             accuracy = float(info.split("Local-Accuracy:")[1].split("ID:")[0])
             #print(loss, accuracy)
-            
-        print("Test on global testing dataset")
-        #test_model = stats(dataset, local_model)
-        test(test_dataset, test_data_split, label_split, local_model, logger, epoch)
-        #test_img(local_model, test_dataset)
+        
+        if (epoch - 1) % 10 == 0:
+            print("Test on global testing dataset, epoch:", epoch)
+            #test_model = stats(dataset, local_model)
+            test(test_dataset, test_data_split, label_split, local_model, logger, epoch)
+            #test_img(local_model, test_dataset)
             
         if not first:    
             # for fairness
