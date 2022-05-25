@@ -407,6 +407,7 @@ def make_local(dataset, data_split, label_split, federation):
     user_idx = torch.arange(cfg['num_users'])[torch.randperm(cfg['num_users'])[:num_active_users]].tolist()
     print("user_idx", user_idx)
     results["user_idx"] = user_idx
+    results["model_rate"] = [federation.model_rate[user_idx[m]] for m in range(num_active_users)]
     local_parameters, param_idx = federation.distribute(user_idx)
     local = [None for _ in range(num_active_users)]
     for m in range(num_active_users):
