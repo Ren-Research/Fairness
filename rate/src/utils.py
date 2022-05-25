@@ -169,7 +169,7 @@ def process_control():
             cfg['milestones'] = [100]
         else:
             raise ValueError('Not valid data_split_mode')
-    elif cfg['data_name'] in ['CIFAR10', 'CIFAR100']:
+    elif cfg['data_name'] in ['CIFAR10', 'cifar10', 'CIFAR100']:
         cfg['data_shape'] = [3, 32, 32]
         cfg['optimizer_name'] = 'SGD'
         cfg['lr'] = 1e-1
@@ -178,8 +178,8 @@ def process_control():
         cfg['scheduler_name'] = 'MultiStepLR'
         cfg['factor'] = 0.1
         if cfg['data_split_mode'] == 'iid':
-            cfg['num_epochs'] = {'global': 400, 'local': 5}
-            cfg['batch_size'] = {'train': 10, 'test': 50}
+            cfg['num_epochs'] = {'global': 50, 'local': 5}
+            cfg['batch_size'] = {'train': 50, 'test': 50}
             cfg['milestones'] = [150, 250]
         elif 'non-iid' in cfg['data_split_mode']:
             cfg['num_epochs'] = {'global': 800, 'local': 5}

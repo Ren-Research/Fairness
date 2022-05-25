@@ -34,6 +34,7 @@ class Logger():
         return
 
     def append(self, result, tag, n=1, mean=True):
+        #print(self.mean)
         for k in result:
             name = '{}/{}'.format(tag, k)
             self.tracker[name] = result[k]
@@ -78,7 +79,7 @@ class Logger():
         info = self.tracker[info_name]
         info[2:2] = evaluation_info
         info = '  '.join(info)
-        print(info)
+        #print(info)
         if self.writer is not None:
             self.iterator[info_name] += 1
             self.writer.add_text(info_name, info, self.iterator[info_name])
