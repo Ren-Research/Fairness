@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='cfg')
 for k in cfg:
     exec('parser.add_argument(\'--{0}\', default=cfg[\'{0}\'], type=type(cfg[\'{0}\']))'.format(k))
 parser.add_argument('--control_name', default=None, type=str)
-parser.add_argument('--q', default=0, type=int)
+parser.add_argument('--q', default=0, type=float)
 parser.add_argument('--partition', type=str, default='homo', help='the data partitioning strategy')
 parser.add_argument('--beta', type=float, default=0.5, help='The concentration parameter of the Dirichlet distribution for heterogeneous partition')
 

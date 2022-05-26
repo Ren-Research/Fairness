@@ -156,8 +156,8 @@ def process_control():
         cfg['scheduler_name'] = 'MultiStepLR'
         cfg['factor'] = 0.1
         if cfg['data_split_mode'] == 'iid':
-            cfg['num_epochs'] = {'global': 200, 'local': 5}
-            cfg['batch_size'] = {'train': 10, 'test': 50}
+            cfg['num_epochs'] = {'global': 50, 'local': 5}
+            cfg['batch_size'] = {'train': 50, 'test': 50}
             cfg['milestones'] = [100]
         elif 'non-iid' in cfg['data_split_mode']:
             cfg['num_epochs'] = {'global': 400, 'local': 5}
