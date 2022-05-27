@@ -236,9 +236,10 @@ def train(dataset, data_split, label_split, federation, global_model, optimizer,
             # for fairness
             loss = train_loss
             loss *= 1000
+            f = federation.model_rate[user_idx[m]]
+            #f = 1
+            loss *= f
             print("loss", loss)
-            #f = federation.model_rate[user_idx[m]]
-            f = 1
             
             w = copy.deepcopy(local_parameters[m])
             w_glob = copy.deepcopy(federation.global_parameters)
@@ -260,12 +261,12 @@ def train(dataset, data_split, label_split, federation, global_model, optimizer,
                     grads[k] = (w_glob[k][:dim[0]] - w[k]) * 1.0 / lr
                     #print("grads", grads)
                     #delta[k] = np.float_power(loss+1e-10, args["q"]) * grads[k] * (f**args["q"])
-                delta[k] = np.float_power(loss, args["q"]) * grads[k] * (f**args["q"])
+                delta[k] = np.float_power(loss, args["q"]) * grads[k]
                 #print("delta", delta)
                 
                 # estimation of the local Lipchitz constant
                 #hs.append(args["q"] * np.float_power(loss+1e-10, (args["q"]-1)) * norm_grad(grads)  * (f**args["q"]) + (1.0/lr) * np.float_power(loss+1e-10, args["q"])  * (f**args["q"]))
-            hs.append(args["q"] * np.float_power(loss, (args["q"]-1)) * norm_grad(grads)  * (f**args["q"]) + (1.0/lr) * np.float_power(loss, args["q"])  * (f**args["q"]))
+            hs.append(args["q"] * np.float_power(loss, (args["q"]-1)) * norm_grad(grads) + (1.0/lr) * np.float_power(loss, args["q"]))
             print("hs", hs)
             Deltas.append(delta)
             #print("deltas", Deltas)
