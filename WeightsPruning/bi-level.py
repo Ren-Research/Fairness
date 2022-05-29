@@ -25,15 +25,15 @@ def norm_grad(grad_list):
     # output: square of the L-2 norm
     keys = list(grad_list.keys())
     
-    client_grads = grad_list[keys[0]].view(-1)#.view(-1) # shape now: (784, 26)
+    client_grads = grad_list[keys[0]].view(-1).detach().cpu().numpy()#.view(-1) # shape now: (784, 26)
     #client_grads = np.append(client_grads, grad_list[keys[2]].view(-1)) # output a flattened array
     #print(client_grads)
     for k in keys[1:]:
-        client_grads = np.append(client_grads, grad_list[k].view(-1)) # output a flattened array
+        client_grads = np.append(client_grads, grad_list[k].view(-1).detach().cpu().numpy()) # output a flattened array
         
-#    for i in range(1, len(grad_list)):
-#        client_grads = np.append(client_grads, grad_list[i]) # output a flattened array
-        
+        #    for i in range(1, len(grad_list)):
+        #        client_grads = np.append(client_grads, grad_list[i]) # output a flattened array--q 1 --device cpu --data_name MNIST --model_name conv --control_name 1_100_0.05_iid_fix_a2-b2-c2-d2-e2_bn_1_1
+        #print("grad_list", grad_list, "norm", np.sum(np.square(client_grads)))
     return np.sum(np.square(client_grads))
 
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     net_part.load_state_dict(w_part)
 
     setting_arrays = [
-         #[1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+        #[1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ]
 
@@ -295,9 +295,9 @@ if __name__ == '__main__':
             #w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
             #w_glob = aggregate(w_glob, 100, w_locals)
             if args.q > 0:
-                w_glob = aggregate2(w_glob, hs, Deltas, part_dim)
+                w_glob = aggregate2(w_glob, hs, Deltas, part_dim, args.device)
             else:
-                w_glob = aggregate(w_glob, part_dim, w_locals)
+                w_glob = aggregate(w_glob, part_dim, w_locals, args.device)
 
             # copy weight to net_glob
             net_glob.load_state_dict(w_glob)

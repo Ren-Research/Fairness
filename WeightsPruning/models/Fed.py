@@ -79,8 +79,8 @@ def FedAvg2(w,type_array,local_w_masks,local_b_masks):
     return w_avg
 
 
-def aggregate2(w_glob, hs, Deltas, dim): 
-    print(w_glob)
+def aggregate2(w_glob, hs, Deltas, dim, device): 
+    #print(w_glob)
     demominator = np.sum(np.asarray(hs))
     num_clients = len(Deltas)
     scaled_deltas = []
@@ -95,15 +95,15 @@ def aggregate2(w_glob, hs, Deltas, dim):
 #        print(client_delta)
 #        print(h)
         
-#    for i in range(5, 10):
-#        zeros = torch.zeros(200-dim, 784)
-#        scaled_deltas[i]["layer_input.weight"] = torch.vstack((scaled_deltas[i]["layer_input.weight"], zeros))
-#        
-#        zeros = torch.tensor([0] * (200-dim))
-#        scaled_deltas[i]["layer_input.bias"] = torch.hstack((zeros, scaled_deltas[i]["layer_input.bias"]))
-#        
-#        zeros = torch.zeros(10, 200-dim)
-#        scaled_deltas[i]["layer_hidden.weight"] = torch.hstack((scaled_deltas[i]["layer_hidden.weight"], zeros))
+    for i in range(5, 10):
+        zeros = torch.zeros(200-dim, 784).to(device)
+        scaled_deltas[i]["layer_input.weight"] = torch.vstack((scaled_deltas[i]["layer_input.weight"], zeros))
+        
+        zeros = torch.tensor([0] * (200-dim)).to(device)
+        scaled_deltas[i]["layer_input.bias"] = torch.hstack((zeros, scaled_deltas[i]["layer_input.bias"]))
+        
+        zeros = torch.zeros(10, 200-dim).to(device)
+        scaled_deltas[i]["layer_hidden.weight"] = torch.hstack((scaled_deltas[i]["layer_hidden.weight"], zeros))
     
     updates = scaled_deltas[0]
     
@@ -113,25 +113,25 @@ def aggregate2(w_glob, hs, Deltas, dim):
             #print("updates", updates)
     for k in keys:
         w_glob[k] -= updates[k]
-    print(updates)
+    #print(updates)
     
     
     return w_glob
 
 
 
-def aggregate(w_glob, dim, w): 
+def aggregate(w_glob, dim, w, device): 
     keys = list(w_glob.keys())
     
     w_new = copy.deepcopy(w)
     for i in range(5, 10):
-        zeros = torch.zeros(200-dim, 784)
+        zeros = torch.zeros(200-dim, 784).to(device)
         w_new[i]["layer_input.weight"] = torch.vstack((w[i]["layer_input.weight"], zeros))
         
-        zeros = torch.tensor([0] * (200-dim))
+        zeros = torch.tensor([0] * (200-dim)).to(device)
         w_new[i]["layer_input.bias"] = torch.hstack((zeros, w[i]["layer_input.bias"]))
         
-        zeros = torch.zeros(10, 200-dim)
+        zeros = torch.zeros(10, 200-dim).to(device)
         w_new[i]["layer_hidden.weight"] = torch.hstack((w[i]["layer_hidden.weight"], zeros))
         
         #print(w_new[i].keys(), [w_new[i][key].shape for key in w_new[i].keys()])
