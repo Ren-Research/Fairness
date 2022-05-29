@@ -79,8 +79,8 @@ def FedAvg2(w,type_array,local_w_masks,local_b_masks):
     return w_avg
 
 
-
-def aggregate2(w_glob, hs, Deltas, f): 
+def aggregate2(w_glob, hs, Deltas, dim): 
+    print(w_glob)
     demominator = np.sum(np.asarray(hs))
     num_clients = len(Deltas)
     scaled_deltas = []
@@ -94,84 +94,130 @@ def aggregate2(w_glob, hs, Deltas, f):
         scaled_deltas.append(client_delta)
 #        print(client_delta)
 #        print(h)
+        
+#    for i in range(5, 10):
+#        zeros = torch.zeros(200-dim, 784)
+#        scaled_deltas[i]["layer_input.weight"] = torch.vstack((scaled_deltas[i]["layer_input.weight"], zeros))
+#        
+#        zeros = torch.tensor([0] * (200-dim))
+#        scaled_deltas[i]["layer_input.bias"] = torch.hstack((zeros, scaled_deltas[i]["layer_input.bias"]))
+#        
+#        zeros = torch.zeros(10, 200-dim)
+#        scaled_deltas[i]["layer_hidden.weight"] = torch.hstack((scaled_deltas[i]["layer_hidden.weight"], zeros))
     
     updates = scaled_deltas[0]
-    for k in keys:
-        updates[k] *= f[0]
     
     for i in range(1, len(Deltas)):
         for k in keys:
-            updates[k] += scaled_deltas[i][k] * f[i]
+            updates[k] += scaled_deltas[i][k]
             #print("updates", updates)
     for k in keys:
         w_glob[k] -= updates[k]
+    print(updates)
+    
     
     return w_glob
 
 
 
-def aggregate(w_glob, dims, w): 
+def aggregate(w_glob, dim, w): 
     keys = list(w_glob.keys())
     
     w_new = copy.deepcopy(w)
-    for i in range(len(dims)):
-        if dims[i] != 200:
-            zeros = torch.zeros(200-dims[i], 784)
-            w_new[i][keys[0]] = torch.vstack((w[i][keys[0]], zeros))
-            
-            zeros = torch.tensor([0] * (200-dims[i]))
-            w_new[i][keys[1]] = torch.hstack((zeros, w[i][keys[1]]))
-            
-            zeros = torch.zeros(10, 200-dims[i])
-            w_new[i][keys[2]] = torch.hstack((w[i][keys[2]], zeros))
+    for i in range(5, 10):
+        zeros = torch.zeros(200-dim, 784)
+        w_new[i]["layer_input.weight"] = torch.vstack((w[i]["layer_input.weight"], zeros))
+        
+        zeros = torch.tensor([0] * (200-dim))
+        w_new[i]["layer_input.bias"] = torch.hstack((zeros, w[i]["layer_input.bias"]))
+        
+        zeros = torch.zeros(10, 200-dim)
+        w_new[i]["layer_hidden.weight"] = torch.hstack((w[i]["layer_hidden.weight"], zeros))
+        
+        #print(w_new[i].keys(), [w_new[i][key].shape for key in w_new[i].keys()])
+    
+#    for i in range(len(keys)):
+#        if dims[i] != 200:
+#            zeros = torch.zeros(200-dims[i], 784)
+#            w_new[i][keys[0]] = torch.vstack((w[i][keys[0]], zeros))
+#            
+#            zeros = torch.tensor([0] * (200-dims[i]))
+#            w_new[i][keys[1]] = torch.hstack((zeros, w[i][keys[1]]))
+#            
+#            zeros = torch.zeros(10, 200-dims[i])
+#            w_new[i][keys[2]] = torch.hstack((w[i][keys[2]], zeros))
             
         #print(w_new[i])
         
-    for k in keys:
-        w_glob[k] = 1 / len(dims) * w_new[0][k]
-        for i in range(1, len(dims)):
-            w_glob[k] += 1 / len(dims) * w_new[i][k]
+    w_glob["layer_input.weight"][:dim, :784] = 1 / 10 * w_new[0]["layer_input.weight"][:dim, :784]
+    for i in range(1, 10):
+        w_glob["layer_input.weight"][:dim, :784] += 1 / 10 * w_new[i]["layer_input.weight"][:dim, :784]
+    w_glob["layer_input.weight"][dim:200, :784] = 1 / 5 * w_new[0]["layer_input.weight"][dim:200, :784]
+    for i in range(1, 5):
+        w_glob["layer_input.weight"][dim:200, :784] += 1 / 5 * w_new[i]["layer_input.weight"][dim:200, :784]
+        
+    w_glob["layer_input.bias"][:dim] = 1 / 10 * w_new[0]["layer_input.bias"][:dim]
+    for i in range(1, 10):
+        w_glob["layer_input.bias"][:dim] += 1 / 10 * w_new[i]["layer_input.bias"][:dim]
+    w_glob["layer_input.bias"][dim:200] = 1 / 5 * w_new[0]["layer_input.bias"][dim:200]
+    for i in range(1, 5):
+        w_glob["layer_input.bias"][dim:200] += 1 / 5 * w_new[i]["layer_input.bias"][dim:200]
+        
+    w_glob["layer_hidden.weight"][:10, :dim] = 1 / 10 * w_new[0]["layer_hidden.weight"][:10, :dim]
+    for i in range(1, 10):
+        w_glob["layer_hidden.weight"][:10, :dim] += 1 / 10 * w_new[i]["layer_hidden.weight"][:10, :dim]
+    w_glob["layer_hidden.weight"][:10, dim:200] = 1 / 5 * w_new[0]["layer_hidden.weight"][:10, dim:200]
+    for i in range(1, 5):
+        w_glob["layer_hidden.weight"][:10, dim:200] += 1 / 5 * w_new[i]["layer_hidden.weight"][:10, dim:200]
+        
+        
+#    for k in keys:
+#        w_glob[k] = 1 / 10 * w_new[0][k]
+#        for i in range(1, 5):
+#            w_glob[k] += 1 / 10 * w_new[i][k]
+#        for i in range(5, 10):
+#            w_glob[k] += 1 / 5 * w_new[i][k]
             
     return w_glob
 
 
 
-def aggregate(w_glob, dims, w): 
-    # [200, 150, 100, 50, 10, 10]
-    # [torch.Size([200, 784]), torch.Size([200]), torch.Size([10, 200]), torch.Size([10])]
-    # [torch.Size([150, 784]), torch.Size([150]), torch.Size([10, 150]), torch.Size([10])]
-    
-    keys = list(w_glob.keys())
-    
-    w_new = copy.deepcopy(w)
-    
-    for i in range(len(dims)):
-        w_glob[keys[0]][:10, :] -= 1 / 6 * w_new[i][keys[0]][:10, :]
-        w_glob[keys[1]][:10] -= 1 / 6 * w_new[i][keys[1]][:10]
-        w_glob[keys[2]][:, :10] -= 1 / 6 * w_new[i][keys[2]][:, :10]
-        w_glob[keys[3]] -= 1 / 6 * w_new[i][keys[3]]
-        
-    for i in range(4):
-        w_glob[keys[0]][10:50, :] -= 1 / 4 * w_new[i][keys[0]][10:50, :]
-        w_glob[keys[1]][10:50] -= 1 / 4 * w_new[i][keys[1]][10:50]
-        w_glob[keys[2]][:, 10:50] -= 1 / 4 * w_new[i][keys[2]][:, 10:50]
-    
-    for i in range(3):
-        w_glob[keys[0]][50:100, :] -= 1 / 3 * w_new[i][keys[0]][50:100, :]
-        w_glob[keys[1]][50:100] -= 1 / 3 * w_new[i][keys[1]][50:100]
-        w_glob[keys[2]][:, 50:100] -= 1 / 3 * w_new[i][keys[2]][:, 50:100]
-        
-    for i in range(2):
-        w_glob[keys[0]][100:150, :] -= 1 / 2 * w_new[i][keys[0]][100:150, :]
-        w_glob[keys[1]][100:150] -= 1 / 2 * w_new[i][keys[1]][100:150]
-        w_glob[keys[2]][:, 100:150] -= 1 / 2 * w_new[i][keys[2]][:, 100:150]
-        
-    for i in range(1):
-        w_glob[keys[0]][150:200, :] -= 1 / 1 * w_new[i][keys[0]][150:200, :]
-        w_glob[keys[1]][150:200] -= 1 / 1 * w_new[i][keys[1]][150:200]
-        w_glob[keys[2]][:, 150:200] -= 1 / 1 * w_new[i][keys[2]][:, 150:200]
-            
-    return w_glob
+#def aggregate(w_glob, dims, w): 
+#    # [200, 150, 100, 50, 10, 10]
+#    # [torch.Size([200, 784]), torch.Size([200]), torch.Size([10, 200]), torch.Size([10])]
+#    # [torch.Size([150, 784]), torch.Size([150]), torch.Size([10, 150]), torch.Size([10])]
+#    
+#    keys = list(w_glob.keys())
+#    
+#    w_new = copy.deepcopy(w)
+#    
+#    for i in range(len(dims)):
+#        w_glob[keys[0]][:10, :] -= 1 / 6 * w_new[i][keys[0]][:10, :]
+#        w_glob[keys[1]][:10] -= 1 / 6 * w_new[i][keys[1]][:10]
+#        w_glob[keys[2]][:, :10] -= 1 / 6 * w_new[i][keys[2]][:, :10]
+#        w_glob[keys[3]] -= 1 / 6 * w_new[i][keys[3]]
+#        
+#    for i in range(4):
+#        w_glob[keys[0]][10:50, :] -= 1 / 4 * w_new[i][keys[0]][10:50, :]
+#        w_glob[keys[1]][10:50] -= 1 / 4 * w_new[i][keys[1]][10:50]
+#        w_glob[keys[2]][:, 10:50] -= 1 / 4 * w_new[i][keys[2]][:, 10:50]
+#    
+#    for i in range(3):
+#        w_glob[keys[0]][50:100, :] -= 1 / 3 * w_new[i][keys[0]][50:100, :]
+#        w_glob[keys[1]][50:100] -= 1 / 3 * w_new[i][keys[1]][50:100]
+#        w_glob[keys[2]][:, 50:100] -= 1 / 3 * w_new[i][keys[2]][:, 50:100]
+#        
+#    for i in range(2):
+#        w_glob[keys[0]][100:150, :] -= 1 / 2 * w_new[i][keys[0]][100:150, :]
+#        w_glob[keys[1]][100:150] -= 1 / 2 * w_new[i][keys[1]][100:150]
+#        w_glob[keys[2]][:, 100:150] -= 1 / 2 * w_new[i][keys[2]][:, 100:150]
+#        
+#    for i in range(1):
+#        w_glob[keys[0]][150:200, :] -= 1 / 1 * w_new[i][keys[0]][150:200, :]
+#        w_glob[keys[1]][150:200] -= 1 / 1 * w_new[i][keys[1]][150:200]
+#        w_glob[keys[2]][:, 150:200] -= 1 / 1 * w_new[i][keys[2]][:, 150:200]
+#            
+#    return w_glob
 
 
 dims = [200, 150, 100, 50, 10, 10]

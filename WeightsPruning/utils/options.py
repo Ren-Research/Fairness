@@ -40,6 +40,7 @@ def args_parser():
     parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
     
     parser.add_argument('--q', type=int, default=5, help='q for fairness')
+    parser.add_argument('--partition', type=str, default='homo', help="data sampling, iid or non-iid")
     
     args = parser.parse_args()
     return args

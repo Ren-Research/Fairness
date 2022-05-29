@@ -36,9 +36,11 @@ class LocalUpdate(object):
         optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
 
         epoch_loss = []
+        epoch_accuracy = []
         
         for iter in range(self.args.local_ep):
             batch_loss = []
+            correct = 0
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
                 net.zero_grad()
@@ -46,12 +48,23 @@ class LocalUpdate(object):
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 optimizer.step()
+                
+                # get the index of the max log-probability
+                y_pred = log_probs.data.max(1, keepdim=True)[1]
+                correct += y_pred.eq(labels.data.view_as(y_pred)).long().cpu().sum()
+                
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.item()))
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
+            
+            accuracy = (100.00 * correct / len(self.ldr_train.dataset)).item()
+            epoch_accuracy.append(accuracy)
+            
         net.zero_grad()
-        return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
+        print(sum(epoch_loss) / len(epoch_loss), sum(epoch_accuracy) / len(epoch_accuracy))
+        return net.state_dict(), sum(epoch_loss) / len(epoch_loss), sum(epoch_accuracy) / len(epoch_accuracy), net
 
+    
