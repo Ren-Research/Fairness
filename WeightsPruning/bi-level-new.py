@@ -153,7 +153,7 @@ if __name__ == '__main__':
     
     # partition test dataset
     #dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
-    dict_users_test, _ = partition_data(dataset_test, 5, args.test_partition)
+    dict_users_test, _ = partition_data(dataset_test, 25, args.test_partition)
     results["dict_users_test"] = dict_users_test
     
     # divide users into groups
