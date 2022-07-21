@@ -64,7 +64,7 @@ class LocalUpdate(object):
             epoch_accuracy.append(accuracy)
             
         net.zero_grad()
-        print(sum(epoch_loss) / len(epoch_loss), sum(epoch_accuracy) / len(epoch_accuracy))
+        #print(sum(epoch_loss) / len(epoch_loss), sum(epoch_accuracy) / len(epoch_accuracy))
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss), sum(epoch_accuracy) / len(epoch_accuracy), net
 
     

@@ -39,8 +39,16 @@ def args_parser():
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
     
-    parser.add_argument('--q', type=int, default=5, help='q for fairness')
-    parser.add_argument('--partition', type=str, default='homo', help="data sampling, iid or non-iid")
+    parser.add_argument('--q', type=float, default=5, help='q for fairness')
+    parser.add_argument('--partition', type=str, default='homo', help="training data sampling, iid or non-iid")
+    parser.add_argument('--test_partition', type=str, default='homo', help="test data sampling, iid or non-iid")
+    parser.add_argument('--test_loss', action='store_true', help='use test loss to achieve fairness or not')
+    parser.add_argument('--bilevel', action='store_true', help='bilevel fairness or not')
+    parser.add_argument('--global_q', type=float, default=0, help='global q for fairness among groups')
+    parser.add_argument('--num_group_users', type=str, default="15,15", help='number of users in each group, split by ","')
+    parser.add_argument('--group_arch', type=str, default="1,2", help='architecture of each group, split by ","')
+    parser.add_argument('--group_dim', type=str, default="25,25", help='dimension of architecture of each group, split by ","')
+    parser.add_argument('--group_q', type=str, default="0,0", help='qm of each group, split by ","')
     
     args = parser.parse_args()
     return args

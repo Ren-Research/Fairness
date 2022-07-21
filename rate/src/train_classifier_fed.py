@@ -268,6 +268,10 @@ def test(dataset, data_split, label_split, model, logger, epoch, final=False):
 
 
 def make_local(dataset, data_split, label_split, federation):
+    print("dataset", dataset)
+    print("data_split", data_split.keys(), [len(data_split[i]) for i in list(data_split.keys())])
+    print("label_split", label_split)
+  
     num_active_users = int(np.ceil(cfg['frac'] * cfg['num_users']))
     torch.manual_seed(1)
     user_idx = torch.arange(cfg['num_users'])[torch.randperm(cfg['num_users'])[:num_active_users]].tolist()
@@ -286,7 +290,6 @@ class Local:
         self.model_rate = model_rate
         self.data_loader = data_loader
         self.label_split = label_split
-        #print("len(data_loader) local", len(data_loader))
 
     def train(self, local_parameters, lr, logger):
         metric = Metric()
@@ -297,6 +300,7 @@ class Local:
         optimizer = make_optimizer(model, lr)
         for local_epoch in range(1, cfg['num_epochs']['local'] + 1):
             for i, input in enumerate(self.data_loader):
+                print("input", input)
                 input = collate(input)
                 input_size = input['img'].size(0)
                 input['label_split'] = torch.tensor(self.label_split)

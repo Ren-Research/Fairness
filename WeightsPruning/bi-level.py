@@ -17,7 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg, FedAvg2, aggregate, aggregate2
-from models.test import test_img
+from models.test import test_img, test_img_part
 
 
 def norm_grad(grad_list):
@@ -66,7 +66,7 @@ use FedAvg2
 
 if __name__ == '__main__':
     part_dim = 25
-    seed = 0
+    seed = 1
     torch.manual_seed(seed)
     np.random.seed(seed)
     
@@ -131,6 +131,12 @@ if __name__ == '__main__':
     
     img_size = dataset_train[0][0].shape
     
+    # homogeneous partition on test dataset
+#    
+    
+    # partition test dataset
+    dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
+    results["dict_users_test"] = dict_users_test
 
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
@@ -161,8 +167,8 @@ if __name__ == '__main__':
     net_part.load_state_dict(w_part)
 
     setting_arrays = [
-        #[1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+        #[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ]
 
     setting_array = setting_arrays[0]
@@ -207,9 +213,11 @@ if __name__ == '__main__':
             
             if iter > 0:  # >=5 , %5, % 50, ==5
                 w_glob = net_glob.state_dict()
+                inital_glob = copy.deepcopy(w_glob)
                 
                 w_part = get_half_paras(w_glob, part_dim)
                 net_part.load_state_dict(w_part)
+                
 
     
             loss_locals = []
@@ -221,107 +229,168 @@ if __name__ == '__main__':
             idxs_users = np.random.choice(range(args.num_users), m, replace=False)
             print(idxs_users)
             results["user_idx"] = idxs_users
-
-            type_array = []
-            hs = []
-            Deltas = []
-
-            for id, idx in enumerate(idxs_users):
-                # typep = get_user_typep(idx, setting_array)
-                typep = setting_array[id]
-                local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
-                if typep == 1:
-                    type_array.append(1)
-                    w, loss, acc_train, model = local.train(net=copy.deepcopy(net_glob).to(args.device))
-                    model.eval()
-                    acc_test, loss_test = test_img(model, dataset_test, args)
-                    print("# of data samples: " + str(len(dict_users[idx])))
-                    print("Full user: " + str(id) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
-                elif typep == 2:
-                    type_array.append(2)
-                    #w, loss = local.train(net=copy.deepcopy(net_2).to(args.device))
-                    #w = get_sub_paras(w, local_w_masks[1], local_b_masks[1])
-                    w, loss, acc_train, model = local.train(net=copy.deepcopy(net_part).to(args.device))
-                    model.eval()
-                    acc_test, loss_test = test_img(model, dataset_test, args)
-                    w = get_half_paras(w, part_dim)
-                    print("# of data samples: " + str(len(dict_users[idx])))
-                    print("Part user: " + str(id) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
-                
-                w_locals.append(copy.deepcopy(w))
-                loss_locals.append(copy.deepcopy(loss))
-                
-                # record results
-                all_clients_epoch_train_loss.append(loss)
-                all_clients_epoch_train_accuracy.append(acc_train)
-                all_clients_epoch_test_loss.append(loss_test)
-                all_clients_epoch_test_accuracy.append(acc_test.item())
-                
             
-                if args.q > 0:
-                    keys = list(w.keys())
-                    grads = copy.deepcopy(w)
-                    delta = copy.deepcopy(w)
+            
+            if iter == args.epochs:
+                print("="*50, "Last Epoch, clients test on global testing dataset only", "="*50)
+                # no local train, just test
+                for id, idx in enumerate(idxs_users):
+                    typep = setting_array[id]
+                    if typep == 1:
+                        type_array.append(1)
+                        model = copy.deepcopy(net_glob)
+                        model.eval()
+                        acc_test, loss_test = test_img(model, dataset_test, args)
+                        print("# of training data samples: " + str(len(dict_users[idx])))
+                        print("Full user: " + str(id) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+                    elif typep == 2:
+                        type_array.append(2)
+                        model = copy.deepcopy(net_part)
+                        model.eval()
+                        acc_test, loss_test = test_img(model, dataset_test, args)
+                        print("# of training data samples: " + str(len(dict_users[idx])))
+                        print("Part user: " + str(id) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+                        
+                    all_clients_epoch_test_loss.append(loss_test)
+                    all_clients_epoch_test_accuracy.append(acc_test)
                     
-                    for k in keys:
-                        shape = w[k].shape
-                        if len(shape) == 2:
-                            grads[k] = (w_glob[k][:shape[0], :shape[1]] - w[k]) * 1.0 / args.lr
-                        else:
-                            grads[k] = (w_glob[k][:shape[0]] - w[k]) * 1.0 / args.lr
-                        #print("grads", grads)
-                        delta[k] = np.float_power(loss+1e-10, args.q) * grads[k]
+                results["client_test_loss"].append(all_clients_epoch_test_loss)
+                results["client_test_accuracy"].append(all_clients_epoch_test_accuracy)
+            
+            else:
+            
+                type_array = []
+                hs = []
+                Deltas = []
+    
+                for id, idx in enumerate(idxs_users):
+                    # typep = get_user_typep(idx, setting_array)
+                    typep = setting_array[id]
+                    local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
+                    if typep == 1:
+                        type_array.append(1)
+                        print("="*50 + " Full User " + str(id) + "="*50)
+                        
+                        # test on local dataset first
+                        model = copy.deepcopy(net_glob)
+                        model.eval()
+                        acc_test, loss_test = test_img_part(model, dict_users_test[idx], dataset_test, args)
+                        print("# of test data samples: " + str(len(dict_users_test[idx])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+                        
+#                        a, l = test_img(model, dataset_test, args)
+#                        print(a, l)
+                        
+                        # local updates
+                        w, loss, acc_train, model = local.train(net=copy.deepcopy(net_glob).to(args.device))
+#                        model.eval()
+#                        if args.test_loss:
+#                            #print(len(local_test_idx), len(global_test_idx))
+#                            acc_test, loss_test = test_img_part(model, global_test_idx, dataset_test, args)
+#                            _, test_loss_for_fair = test_img_part(model, local_test_idx, dataset_test, args)
+#                        else:
+#                            acc_test, loss_test = test_img(model, dataset_test, args)
+                        print("# of training data samples: " + str(len(dict_users[idx])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
+                    elif typep == 2:
+                        type_array.append(2)
+                        print("="*50 + " Part User " + str(id) + "="*50)
+                        
+                        # test on local dataset first
+                        model = copy.deepcopy(net_part)
+                        model.eval()
+                        acc_test, loss_test = test_img_part(model, dict_users_test[idx], dataset_test, args)
+                        print("# of test data samples: " + str(len(dict_users_test[idx])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+                        
+                        #w, loss = local.train(net=copy.deepcopy(net_2).to(args.device))
+                        #w = get_sub_paras(w, local_w_masks[1], local_b_masks[1])
+                        w, loss, acc_train, model = local.train(net=copy.deepcopy(net_part).to(args.device))
+#                        model.eval()
+#                        if args.test_loss:
+#                            #print(len(local_test_idx), len(global_test_idx))
+#                            acc_test, loss_test = test_img_part(model, global_test_idx, dataset_test, args)
+#                            _, test_loss_for_fair = test_img_part(model, local_test_idx, dataset_test, args)
+#                        else:
+#                            acc_test, loss_test = test_img(model, dataset_test, args)
+                        w = get_half_paras(w, part_dim)
+                        print("# of training data samples: " + str(len(dict_users[idx])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
                     
-                    #loss *= 1000
-                    loss = loss
-                    # estimation of the local Lipchitz constant
-                    hs.append((args.q * np.float_power(loss+1e-10, (args.q-1)) * norm_grad(grads) + (1.0/args.lr) * np.float_power(loss+1e-10, args.q)) / 1000)
-                    print("loss", loss, "hs", hs)
-                    Deltas.append(delta)
-                    #print("deltas", Deltas)
+                    w_locals.append(copy.deepcopy(w))
+                    loss_locals.append(copy.deepcopy(loss))
                     
-            results["client_train_loss"].append(all_clients_epoch_train_loss)
-            results["client_train_accuracy"].append(all_clients_epoch_train_accuracy)
-            results["client_test_loss"].append(all_clients_epoch_test_loss)
-            results["client_test_accuracy"].append(all_clients_epoch_test_accuracy)
+                    # record results
+                    all_clients_epoch_train_loss.append(loss)
+                    all_clients_epoch_train_accuracy.append(acc_train)
+                    all_clients_epoch_test_loss.append(loss_test)
+                    all_clients_epoch_test_accuracy.append(acc_test.item())
+                    
+                    #print("hhh", loss, test_loss_for_fair)
+                    if args.q > 0 and iter > 0:
+                        #loss *= 1000
+                        if args.test_loss:
+                            loss = copy.deepcopy(loss_test)
+                        # else just use the training loss
+                        
+                        keys = list(w.keys())
+                        grads = copy.deepcopy(w)
+                        delta = copy.deepcopy(w)
+                        
+                        for k in keys:
+                            shape = w[k].shape
+                            if len(shape) == 2:
+                                grads[k] = (w_glob[k][:shape[0], :shape[1]] - w[k]) * 1.0 / args.lr
+                            else:
+                                grads[k] = (w_glob[k][:shape[0]] - w[k]) * 1.0 / args.lr
+                            #print("grads", grads)
+                            delta[k] = np.float_power(loss+1e-10, args.q) * grads[k]
+                        
+                        # estimation of the local Lipchitz constant
+                        hs.append((args.q * np.float_power(loss+1e-10, (args.q-1)) * norm_grad(grads) / norm_grad(inital_glob) + (1.0/args.lr) * np.float_power(loss+1e-10, args.q)))
+                        print("loss", loss, "hs", hs)
+                        Deltas.append(delta)
+                        #print("deltas", Deltas)
+                        
+                results["client_train_loss"].append(all_clients_epoch_train_loss)
+                results["client_train_accuracy"].append(all_clients_epoch_train_accuracy)
+                results["client_test_loss"].append(all_clients_epoch_test_loss)
+                results["client_test_accuracy"].append(all_clients_epoch_test_accuracy)
                 
     
-            # with open(txt_name, 'a+') as f:
-            #     print(type_array, file=f)
-            print(type_array)
-            # FOR ITER
-
-            # update global weights
-            #w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
-            #w_glob = aggregate(w_glob, 100, w_locals)
-            if args.q > 0:
-                w_glob = aggregate2(w_glob, hs, Deltas, part_dim, args.device)
-            else:
-                w_glob = aggregate(w_glob, part_dim, w_locals, args.device)
-
-            # copy weight to net_glob
-            net_glob.load_state_dict(w_glob)
-            # with open(txt_name, 'a+') as f:
-            #     print(loss_locals, file=f)
-            #print(loss_locals)
-            # print loss
-            loss_avg = sum(loss_locals) / len(loss_locals)
-            with open(txt_name, 'a+') as f:
-                print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg), file=f)
-            print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
-            loss_train.append(loss_avg)
-
-            net_glob.eval()
-            acc_test, loss_test = test_img(net_glob, dataset_test, args)
-            with open(txt_name, 'a+') as f:
-                print('TRound {:3d}, Testing loss {:.3f}'.format(iter, loss_test), file=f)
-                print('ARound {:3d}, Testing accuracy: {:.2f}'.format(iter, acc_test), file=f)
-            print('LRound {:3d}, Testing loss {:.3f}'.format(iter, loss_test))
-            print('ARound {:3d}, Testing accuracy: {:.2f}'.format(iter, acc_test))
-            net_glob.train()
-            
-            results["global_model_accuracy"].append(acc_test.item())
-            results["global_model_loss"].append(loss_test)
+                # with open(txt_name, 'a+') as f:
+                #     print(type_array, file=f)
+                print(type_array)
+                # FOR ITER
+    
+                # update global weights
+                #w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
+                #w_glob = aggregate(w_glob, 100, w_locals)
+                if args.q > 0 and iter > 0:
+                    w_glob = aggregate2(w_glob, hs, Deltas, part_dim, args.device)
+                else:
+                    w_glob = aggregate(w_glob, part_dim, w_locals, args.device)
+    
+                # copy weight to net_glob
+                net_glob.load_state_dict(w_glob)
+                # with open(txt_name, 'a+') as f:
+                #     print(loss_locals, file=f)
+                #print(loss_locals)
+                # print loss
+                loss_avg = sum(loss_locals) / len(loss_locals)
+                with open(txt_name, 'a+') as f:
+                    print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg), file=f)
+                print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+                loss_train.append(loss_avg)
+    
+                net_glob.eval()
+                acc_test, loss_test = test_img(net_glob, dataset_test, args)
+                with open(txt_name, 'a+') as f:
+                    print('TRound {:3d}, Testing loss {:.3f}'.format(iter, loss_test), file=f)
+                    print('ARound {:3d}, Testing accuracy: {:.2f}'.format(iter, acc_test), file=f)
+                print('LRound {:3d}, Testing loss {:.3f}'.format(iter, loss_test))
+                print('ARound {:3d}, Testing accuracy: {:.2f}'.format(iter, acc_test))
+                net_glob.train()
+                
+                results["global_model_accuracy"].append(acc_test.item())
+                results["global_model_loss"].append(loss_test)
+                
             pickle.dump(results, open("./data/q" + str(args.q) + "_results.pickle", "wb"))  # save it into a file named save.p
             
 
