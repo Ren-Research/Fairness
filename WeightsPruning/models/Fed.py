@@ -190,24 +190,32 @@ def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L
                     
                 dim_range_to_hs[dim_key].append(gm / (qm + 1) * (global_q - qm) / (qm + 1) * weighted_f1 ** ((global_q - 2 * qm - 1) / (qm + 1)) * (norm_grad(delta) / norm_grad(inital_glob)) + gm / (qm + 1) * weighted_f1 ** ((global_q - qm) / (qm + 1)) * (weighted_norm + weighted_f2) )
                 
-    #print("hhh", dim_range_to_hs)
+    #print("hhh", dim_range_to_hs, user_pm, user_gm)
+    #print([inital_glob[k].shape for k in inital_glob.keys()])
     scaled_delta = copy.deepcopy(dim_range_to_delta)
     for dim_key in scaled_delta.keys():
         denom = sum(dim_range_to_hs[dim_key])
+        #print(dim_key, denom)
         for i in range(len(scaled_delta[dim_key])):
             for k in scaled_delta[dim_key][i].keys():
                 scaled_delta[dim_key][i][k] /= denom
             
+            #print(scaled_delta[dim_key][i]["layer_input.weight"].shape[0])
             if scaled_delta[dim_key][i]["layer_input.weight"].shape[0] != 200:
-                dim = scaled_delta[dim_key][i]["layer_input.weight"].shape[0]
-                zeros = torch.zeros(200-dim, 784).to(device)
-                scaled_delta[dim_key][i]["layer_input.weight"] = torch.vstack((scaled_delta[dim_key][i]["layer_input.weight"], zeros))
+                zeros1 = torch.zeros(dim_key[0], 784).to(device)
+                zeros2 = torch.zeros(200-dim_key[1], 784).to(device)
+                scaled_delta[dim_key][i]["layer_input.weight"] = torch.vstack((zeros1, scaled_delta[dim_key][i]["layer_input.weight"]))
+                scaled_delta[dim_key][i]["layer_input.weight"] = torch.vstack((scaled_delta[dim_key][i]["layer_input.weight"], zeros2))
                 
-                zeros = torch.tensor([0] * (200-dim)).to(device)
-                scaled_delta[dim_key][i]["layer_input.bias"] = torch.hstack((scaled_delta[dim_key][i]["layer_input.bias"], zeros))
+                zeros1 = torch.tensor([0] * dim_key[0]).to(device)
+                zeros2 = torch.tensor([0] * (200 - dim_key[1])).to(device)
+                scaled_delta[dim_key][i]["layer_input.bias"] = torch.hstack((zeros1, scaled_delta[dim_key][i]["layer_input.bias"]))
+                scaled_delta[dim_key][i]["layer_input.bias"] = torch.hstack((scaled_delta[dim_key][i]["layer_input.bias"], zeros2))
                 
-                zeros = torch.zeros(10, 200-dim).to(device)
-                scaled_delta[dim_key][i]["layer_hidden.weight"] = torch.hstack((scaled_delta[dim_key][i]["layer_hidden.weight"], zeros))
+                zeros1 = torch.zeros(10, dim_key[0]).to(device)
+                zeros2 = torch.zeros(10, 200-dim_key[1]).to(device)
+                scaled_delta[dim_key][i]["layer_hidden.weight"] = torch.hstack((zeros1, scaled_delta[dim_key][i]["layer_hidden.weight"]))
+                scaled_delta[dim_key][i]["layer_hidden.weight"] = torch.hstack((scaled_delta[dim_key][i]["layer_hidden.weight"], zeros2))
                     
     w = copy.deepcopy(w_glob)
     for key in w.keys():

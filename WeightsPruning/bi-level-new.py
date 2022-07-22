@@ -58,6 +58,49 @@ def get_half_paras(w_glob, part_dim):
     return w_l
 
 
+def partition_with_distribution(distribution, num_group_users, dataset):
+    all_dict_users = {}
+    all_traindata_cls_counts = {}
+    
+    idx = 0
+    for i in range(len(num_group_users)):
+        gp_dict = []
+        gp_cls = []
+        step = num_group_users[i] // len(distribution)
+        for j in range(len(distribution)):
+            dist = distribution[j]
+            if "noniid-labeldir" in dist:
+                beta = float(dist.split("beta")[-1])
+                dist = "noniid-labeldir"
+            else:
+                beta = 0.4
+                
+            if j != len(distribution) - 1:
+                for _ in range(step):
+                    torch.manual_seed(100*(i+1) + _)
+                    np.random.seed(100*(i+1) + _)
+                    dict_users, traindata_cls_counts = partition_data(dataset, num_group_users[i], dist, beta)
+                    
+                    all_dict_users[idx] = dict_users[0]
+                    all_traindata_cls_counts[idx] = traindata_cls_counts[0]
+                
+                    idx += 1
+            else:
+                for _ in range(num_group_users[i] - (len(distribution)-1)*step):
+                    torch.manual_seed(100*(i+1) + _)
+                    np.random.seed(100*(i+1) + _)
+                    dict_users, traindata_cls_counts = partition_data(dataset, num_group_users[i], dist, beta)
+                    
+                    all_dict_users[idx] = dict_users[0]
+                    all_traindata_cls_counts[idx] = traindata_cls_counts[0]
+                    
+                    idx += 1
+                    
+    print(all_dict_users.keys(), all_dict_users[0], all_dict_users[10], [len(all_dict_users[k]) for k in all_dict_users.keys()])
+        
+    return all_dict_users, all_traindata_cls_counts
+
+
 """
 AvgAll:
 leave bias alone,
@@ -65,6 +108,8 @@ use FedAvg2
 """
 
 if __name__ == '__main__':
+    distribution = ["homo", "noniid-labeldir-beta0.5", "noniid-labeldir-beta0.1","iid-diff-quantity", "noniid-#label10", ]
+    
     seed = 0
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -118,44 +163,6 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized dataset')
     
-    # homo partitiion on half of the data
-    n_samples = len(dataset_train.data)
-    dataset_homo = copy.deepcopy(dataset_train)
-    dataset_homo.data = dataset_homo.data[:n_samples]
-    dataset_homo.targets = dataset_homo.targets[:n_samples]
-    #dict_users_homo, traindata_cls_counts_homo = partition_data(dataset_homo, args.num_users, "homo")
-    dict_users_homo, traindata_cls_counts_homo = partition_data(dataset_homo, 5, "homo")
-    
-    # non-iid partitiion on the other half of the data
-    dataset_non = copy.deepcopy(dataset_train)
-    dataset_non.data = dataset_non.data[n_samples//2:]
-    dataset_non.targets = dataset_non.targets[n_samples//2:]
-    tmp, traindata_cls_counts_non = partition_data(dataset_non, args.num_users // 2, "homo")
-    dict_users_non = {}
-    for key, val in tmp.items():
-        dict_users_non[key+args.num_users//2] = [i + n_samples//2 for i in val]
-        #print(dict_users_homo, "hhhhh", dict_users_non)
-
-#    print("dataset", len(dict_users.keys()), [len(dict_users[k]) for k in dict_users.keys()])
-    results["dict_users"] = dict_users_homo
-    results["traindata_cls_counts"] = traindata_cls_counts_homo
-    
-    #print("traindata_cls_counts", traindata_cls_counts)
-    label_split = [[] for _ in range(len(list(dict_users_homo.keys())))]
-    for k in list(dict_users_homo.keys()):
-        for key in list(traindata_cls_counts_homo[k].keys()):
-            if traindata_cls_counts_homo[k][key] != 0:
-                label_split[k].append(key)
-    print("label_split", len(label_split), label_split[:10])
-    results["label_split"] = label_split
-    
-    img_size = dataset_train[0][0].shape
-    
-    # partition test dataset
-    #dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
-    dict_users_test, _ = partition_data(dataset_test, 25, args.test_partition)
-    results["dict_users_test"] = dict_users_test
-    
     # divide users into groups
     num_active_users = max(int(args.frac * args.num_users), 1)
     num_group_users = [int(i) for i in args.num_group_users.split(",")] # number of users in each group
@@ -183,13 +190,54 @@ if __name__ == '__main__':
     user_group_idx = []
     for i in range(len(num_group_users)):
         user_group_idx.extend([i] * num_group_users[i])
-    print(user_group_idx)    
+    print(user_group_idx)        
+    
+    ############################################ sample data ###########################
+
+    n_samples = len(dataset_train.data)
+    dataset = copy.deepcopy(dataset_train)
+    dataset.data = dataset.data[:n_samples]
+    dataset.targets = dataset.targets[:n_samples]
+    
+    
+    all_dict_users, all_traindata_cls_counts = partition_with_distribution(distribution, num_group_users, dataset)
+    #print(all_dict_users[0])
     
     all_gm = [1 / len(num_group_users)] * len(user_dim)
     all_pm = []
+    start = 0
     for num in num_group_users:
-        all_pm.extend([1 / num] * num)
+        cnt = 0
+        for i in range(start, start+num):
+            cnt += len(all_dict_users[i])
+        for i in range(start, start+num):
+            all_pm.append(len(all_dict_users[i]) / cnt)
+        
+        start += num
     print(all_gm, all_pm)
+        
+#    print("dataset", len(dict_users.keys()), [len(dict_users[k]) for k in dict_users.keys()])
+    results["dict_users"] = all_dict_users
+    results["traindata_cls_counts"] = all_traindata_cls_counts
+    
+    #print("traindata_cls_counts", traindata_cls_counts)
+    for i in range(len(all_dict_users)):
+        label_split = [[] for _ in range(len(list(all_dict_users.keys())))]
+        for k in list(all_dict_users.keys()):
+            for key in list(all_traindata_cls_counts[k].keys()):
+                if all_traindata_cls_counts[k][key] != 0:
+                    label_split[k].append(key)
+    print("label_split", len(label_split), label_split[:10])
+    results["label_split"] = label_split
+    
+    img_size = dataset_train[0][0].shape
+    
+    # partition test dataset
+    all_dict_users_test, all_traindata_cls_counts_test = partition_with_distribution(distribution, num_group_users, dataset_test)
+    #dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
+    #dict_users_test, _ = partition_data(dataset_test, 25, args.test_partition)
+    results["dict_users_test"] = all_dict_users_test
+    
 
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
@@ -273,19 +321,19 @@ if __name__ == '__main__':
                 
             model.eval()
             
-            u = active_user_idx[i]
+            #u = active_user_idx[i]
             # local testing global model
             #acc_test, loss_test = test_img_part(model, dict_users_test[u], dataset_test, args)
-            acc_test, loss_test = test_img_part(model, dict_users_test[i%5], dataset_test, args)
-            #print("User: " + str(u) + " # of test data samples: " + str(len(dict_users_test[u])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
-            print("User: " + str(u) + " # of test data samples: " + str(len(dict_users_test[i%5])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+            acc_test, loss_test = test_img_part(model, all_dict_users_test[i], dataset_test, args)
+            print("User: " + str(i) + " # of test data samples: " + str(len(all_dict_users_test[i])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+            #print("User: " + str(u) + " # of test data samples: " + str(len(dict_users_test[i%5])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
             
             # local updates
             #local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users_homo[u])
-            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users_homo[i%5])
+            local = LocalUpdate(args=args, dataset=dataset_train, idxs=all_dict_users[i])
             w, loss, acc_train, trained_model = local.train(net=copy.deepcopy(model).to(args.device))
-            #print("# of training data samples: " + str(len(dict_users_homo[u])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
-            print("# of training data samples: " + str(len(dict_users_homo[i%5])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
+            print("# of training data samples: " + str(len(all_dict_users[i])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
+            #print("# of training data samples: " + str(len(dict_users_homo[i%5])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
             print()
             
             w = get_half_paras(w, user_dim[i])
@@ -295,7 +343,8 @@ if __name__ == '__main__':
             all_clients_epoch_test_loss.append(loss_test)
             all_clients_epoch_test_accuracy.append(acc_test)
             
-            if args.bilevel and iter > 0:
+            #if args.bilevel and iter > 0:
+            if True:
                 if args.test_loss:
                     l = copy.deepcopy(loss_test)
                 else:
@@ -362,7 +411,8 @@ if __name__ == '__main__':
         if args.bilevel and iter > 0:
             w_glob = aggregate_new(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
         else:
-            w_glob = aggregate(w_glob, args.device, w_locals, user_dim)
+            w_glob = aggregate_new(all_grad, all_loss, [0] * len(user_q), user_dim, 0, w_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            #w_glob = aggregate(w_glob, args.device, w_locals, user_dim)
             
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)

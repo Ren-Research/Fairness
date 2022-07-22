@@ -7,6 +7,7 @@ import numpy as np
 from torchvision import datasets, transforms
 import torch
 import copy
+import random
 
 
 def get_user_typep(x, setting_array=[7, 1, 1, 1]):
@@ -259,6 +260,7 @@ def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
         
     elif partition == "noniid-labeldir":
         min_size = 0
+        #min_require_size = 10
         min_require_size = 10
         K = 10
         if dataset in ('celeba', 'covtype', 'a9a', 'rcv1', 'SUSY'):
@@ -406,10 +408,11 @@ def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
         no = np.random.permutation(num_user)
         batch_idxs = np.array_split(no, num_users)
         net_dataidx_map = {i:np.zeros(0,dtype=np.int32) for i in range(num_users)}
+        print(net_dataidx_map)
         for i in range(num_users):
             for j in batch_idxs[i]:
                 net_dataidx_map[i]=np.append(net_dataidx_map[i], np.arange(user[j], user[j+1]))
-                
+    
     traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map)
     return (net_dataidx_map, traindata_cls_counts)
 
