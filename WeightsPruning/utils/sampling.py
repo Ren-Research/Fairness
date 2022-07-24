@@ -260,7 +260,6 @@ def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
         
     elif partition == "noniid-labeldir":
         min_size = 0
-        #min_require_size = 10
         min_require_size = 10
         K = 10
         if dataset in ('celeba', 'covtype', 'a9a', 'rcv1', 'SUSY'):
@@ -277,12 +276,15 @@ def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
                 idx_k = np.where(y_train == k)[0]
                 np.random.shuffle(idx_k)
                 proportions = np.random.dirichlet(np.repeat(beta, num_users))
+                #print("proportions", proportions)
                 # logger.info("proportions1: ", proportions)
                 # logger.info("sum pro1:", np.sum(proportions))
                 ## Balance
                 proportions = np.array([p * (len(idx_j) < N / num_users) for p, idx_j in zip(proportions, idx_batch)])
+                #print("proportions", proportions)
                 # logger.info("proportions2: ", proportions)
                 proportions = proportions / proportions.sum()
+                #print("proportions", proportions)
                 # logger.info("proportions3: ", proportions)
                 proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
                 # logger.info("proportions4: ", proportions)

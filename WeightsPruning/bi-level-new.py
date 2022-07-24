@@ -58,7 +58,7 @@ def get_half_paras(w_glob, part_dim):
     return w_l
 
 
-def partition_with_distribution(distribution, num_group_users, dataset):
+def partition_with_distribution(distribution, num_group_users, dataset, desire=3000):
     all_dict_users = {}
     all_traindata_cls_counts = {}
     
@@ -68,10 +68,11 @@ def partition_with_distribution(distribution, num_group_users, dataset):
         gp_cls = []
         step = num_group_users[i] // len(distribution)
         for j in range(len(distribution)):
+            #print(distribution[j])
             dist = distribution[j]
-            if "noniid-labeldir" in dist:
+            if "beta" in dist:
                 beta = float(dist.split("beta")[-1])
-                dist = "noniid-labeldir"
+                dist = dist.split("beta")[0][:-1]
             else:
                 beta = 0.4
                 
@@ -79,24 +80,40 @@ def partition_with_distribution(distribution, num_group_users, dataset):
                 for _ in range(step):
                     torch.manual_seed(100*(i+1) + _)
                     np.random.seed(100*(i+1) + _)
-                    dict_users, traindata_cls_counts = partition_data(dataset, num_group_users[i], dist, beta)
+                    dict_users, traindata_cls_counts = partition_data(dataset, int(len(dataset.data) // desire), dist, beta)
+                    #print([len(dict_users[k]) for k in dict_users.keys()])
                     
-                    all_dict_users[idx] = dict_users[0]
-                    all_traindata_cls_counts[idx] = traindata_cls_counts[0]
+                    min_diff = float("inf")
+                    min_idx = 0
+                    for k in dict_users.keys():
+                        if abs(len(dict_users[k]) - desire) < min_diff:
+                            min_idx = k
+                            min_diff = abs(len(dict_users[k]) - desire)
+                            
+                    all_dict_users[idx] = dict_users[min_idx]
+                    all_traindata_cls_counts[idx] = traindata_cls_counts[min_idx]
                 
                     idx += 1
             else:
                 for _ in range(num_group_users[i] - (len(distribution)-1)*step):
                     torch.manual_seed(100*(i+1) + _)
                     np.random.seed(100*(i+1) + _)
-                    dict_users, traindata_cls_counts = partition_data(dataset, num_group_users[i], dist, beta)
+                    dict_users, traindata_cls_counts = partition_data(dataset, int(len(dataset.data) // desire), dist, beta)
+                    #dict_users, traindata_cls_counts = partition_data(dataset, 20, dist, beta)
                     
-                    all_dict_users[idx] = dict_users[0]
-                    all_traindata_cls_counts[idx] = traindata_cls_counts[0]
+                    min_diff = float("inf")
+                    min_idx = 0
+                    for k in dict_users.keys():
+                        if abs(len(dict_users[k]) - desire) < min_diff:
+                            min_idx = k
+                            min_diff = abs(len(dict_users[k]) - desire)
+                        
+                    all_dict_users[idx] = dict_users[min_idx]
+                    all_traindata_cls_counts[idx] = traindata_cls_counts[min_idx]
                     
                     idx += 1
                     
-    print(all_dict_users.keys(), all_dict_users[0], all_dict_users[10], [len(all_dict_users[k]) for k in all_dict_users.keys()])
+    print(all_dict_users.keys(), [len(all_dict_users[k]) for k in all_dict_users.keys()])
         
     return all_dict_users, all_traindata_cls_counts
 
@@ -108,7 +125,7 @@ use FedAvg2
 """
 
 if __name__ == '__main__':
-    distribution = ["homo", "noniid-labeldir-beta0.5", "noniid-labeldir-beta0.1","iid-diff-quantity", "noniid-#label10", ]
+    distribution = ["noniid-labeldir-beta0.5", "noniid-labeldir-beta1","iid-diff-quantity-beta0.5", "noniid-#label5", "noniid-#label8"]
     
     seed = 0
     torch.manual_seed(seed)
@@ -178,19 +195,19 @@ if __name__ == '__main__':
     user_q = []
     for i in range(len(num_group_users)):
         user_q.extend([group_q[i]] * num_group_users[i])
-    print(user_q)
+    print("user q:", user_q)
     assert len(group_q) == len(num_group_users)
     group_dim = [int(i) for i in args.group_dim.split(",")]
     assert len(group_dim) == len(num_group_users)
     user_dim = []
     for i in range(len(num_group_users)):
         user_dim.extend([group_dim[i]] * num_group_users[i])
-    print(user_dim)
+    print("user dim:", user_dim)
     
     user_group_idx = []
     for i in range(len(num_group_users)):
         user_group_idx.extend([i] * num_group_users[i])
-    print(user_group_idx)        
+    print("user group index:", user_group_idx)        
     
     ############################################ sample data ###########################
 
@@ -200,12 +217,13 @@ if __name__ == '__main__':
     dataset.targets = dataset.targets[:n_samples]
     
     
-    all_dict_users, all_traindata_cls_counts = partition_with_distribution(distribution, num_group_users, dataset)
+    all_dict_users, all_traindata_cls_counts = partition_with_distribution(distribution, num_group_users, dataset, 3000)
     #print(all_dict_users[0])
     
-    all_gm = [1 / len(num_group_users)] * len(user_dim)
+    all_gm = []
     all_pm = []
     start = 0
+    total = sum([len(l) for l in all_dict_users.values()])
     for num in num_group_users:
         cnt = 0
         for i in range(start, start+num):
@@ -213,8 +231,11 @@ if __name__ == '__main__':
         for i in range(start, start+num):
             all_pm.append(len(all_dict_users[i]) / cnt)
         
+        tmp = [cnt / total for _ in range(num)]
+        all_gm.extend(tmp)
+        
         start += num
-    print(all_gm, all_pm)
+    print("all gm: ", all_gm, "all qm:", all_pm)
         
 #    print("dataset", len(dict_users.keys()), [len(dict_users[k]) for k in dict_users.keys()])
     results["dict_users"] = all_dict_users
@@ -233,10 +254,19 @@ if __name__ == '__main__':
     img_size = dataset_train[0][0].shape
     
     # partition test dataset
-    all_dict_users_test, all_traindata_cls_counts_test = partition_with_distribution(distribution, num_group_users, dataset_test)
+    all_dict_users_test, all_traindata_cls_counts_test = partition_with_distribution(distribution, num_group_users, dataset_test, 1000)
     #dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
     #dict_users_test, _ = partition_data(dataset_test, 25, args.test_partition)
     results["dict_users_test"] = all_dict_users_test
+    
+    for i in range(len(all_dict_users_test)):
+        label_split = [[] for _ in range(len(list(all_dict_users_test.keys())))]
+        for k in list(all_dict_users_test.keys()):
+            for key in list(all_traindata_cls_counts_test[k].keys()):
+                if all_traindata_cls_counts_test[k][key] != 0:
+                    label_split[k].append(key)
+    print("label_split_test", len(label_split), label_split[:10])
+    results["label_split_test"] = label_split
     
 
     # build model
@@ -314,6 +344,7 @@ if __name__ == '__main__':
         
         for i in range(len(user_q)):
             model = copy.deepcopy(net_part[i])
+            print(i, model)
             if user_dim[i] == dim_hidden:
                 print("="*50 + str(i) + " Full User Group " + "="*50)
             else:
