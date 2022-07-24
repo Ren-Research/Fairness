@@ -344,7 +344,7 @@ if __name__ == '__main__':
         
         for i in range(len(user_q)):
             model = copy.deepcopy(net_part[i])
-            print(i, model)
+            
             if user_dim[i] == dim_hidden:
                 print("="*50 + str(i) + " Full User Group " + "="*50)
             else:
