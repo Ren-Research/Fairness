@@ -6,6 +6,8 @@ import copy
 import torch
 from torch import nn
 import numpy as np
+import collections
+
 
 def norm_grad(grad_list):
     # input: nested gradients
@@ -109,8 +111,49 @@ def FedAvg2(w,type_array,local_w_masks,local_b_masks):
     return w_avg
 
 
-def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L, w_glob, device, user_gm, user_pm, user_group_idx):
-    import collections
+def aggregate_nofair(all_w, device, user_gm, user_pm, user_group_idx, user_dim, w_glob):
+    total_group = len(set(user_group_idx))
+    
+    dim_to_user = collections.defaultdict(list)  # key: dim, value: [user index]
+    for i in range(len(user_dim)):
+        dim_to_user[user_dim[i]].append(i)
+        
+    all_dim = sorted(list(dim_to_user.keys()))
+    dim_range_to_user = collections.defaultdict(list)  # key: (dim_lo, dim_hi), value: [(user index, group index)]
+    for i in range(len(all_dim)):
+        if i == 0:
+            key = (0, all_dim[0])
+        else:
+            key = (all_dim[i-1], all_dim[i])
+            
+        for j in range(len(user_dim)):
+            if user_dim[j] >= all_dim[i]:
+                dim_range_to_user[key].append((j, user_group_idx[j]))
+    print(dim_range_to_user)
+    
+    w = copy.deepcopy(w_glob)
+    for dim_key in dim_range_to_user.keys():
+        u0, g0 = dim_range_to_user[dim_key][0]
+        tmp = copy.deepcopy(clip_paras(all_w[u0], dim_key[0], dim_key[1])) 
+        for k in w.keys():
+            tmp[k] *= user_pm[u0] * user_gm[u0]
+        
+        
+        for i in range(1, len(dim_range_to_user[dim_key])):
+            u, g = dim_range_to_user[dim_key][i]
+            for k in w.keys():
+                tmp[k] += copy.deepcopy(clip_paras(all_w[u], dim_key[0], dim_key[1]))[k] * user_pm[u] * user_gm[u]
+        
+        w['layer_input.weight'][dim_key[0]:dim_key[1], :] = copy.deepcopy(tmp['layer_input.weight'])
+        w['layer_input.bias'][dim_key[0]:dim_key[1]] = copy.deepcopy(tmp['layer_input.bias'])
+        w['layer_hidden.weight'][:, dim_key[0]:dim_key[1]] = copy.deepcopy(tmp['layer_hidden.weight'])
+        w['layer_hidden.bias'] = copy.deepcopy(tmp['layer_hidden.bias'])
+        
+    return w
+            
+    
+def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L, w_glob, device, user_gm, user_pm, user_group_idx):   
+    print("inital_glob", norm_grad(inital_glob))
     
     total_group = len(set(user_group_idx))
     
@@ -190,8 +233,16 @@ def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L
                     
                 dim_range_to_hs[dim_key].append(gm / (qm + 1) * (global_q - qm) / (qm + 1) * weighted_f1 ** ((global_q - 2 * qm - 1) / (qm + 1)) * (norm_grad(delta) / norm_grad(inital_glob)) + gm / (qm + 1) * weighted_f1 ** ((global_q - qm) / (qm + 1)) * (weighted_norm + weighted_f2) )
                 
-    #print("hhh", dim_range_to_hs, user_pm, user_gm)
     #print([inital_glob[k].shape for k in inital_glob.keys()])
+#    print("all_grad", all_grad)
+#    print([norm_grad(k) for k in all_grad])
+#    print("all_loss", all_loss)
+#    print("dim_range_to_delta", dim_range_to_delta)
+#    print("dim_range_to_hs", dim_range_to_hs)
+#    print("user_gm", user_gm)
+#    print("user_pm", user_pm)
+#    print("all_qm", all_qm)
+#    print(h)
     scaled_delta = copy.deepcopy(dim_range_to_delta)
     for dim_key in scaled_delta.keys():
         denom = sum(dim_range_to_hs[dim_key])
@@ -224,6 +275,9 @@ def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L
                 w[key] -= d2[key]
     
     return w
+
+
+
             
 
 

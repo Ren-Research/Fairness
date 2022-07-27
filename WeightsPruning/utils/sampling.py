@@ -248,8 +248,11 @@ def cifar_iid(dataset, num_users):
     return dict_users
 
 
-def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
-    y_train = dataset.train_labels.numpy()
+def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4, dataset_name="mnist"):
+    if dataset_name == "mnist":
+        y_train = dataset.train_labels.numpy()
+    elif dataset_name == "cifar10":
+        y_train = np.array(dataset.targets)
     n_train = y_train.shape[0]
     
     if partition == "homo":
@@ -269,7 +272,6 @@ def partition_data(dataset, num_users, partition="noniid-labeldir", beta=0.4):
         N = y_train.shape[0]
         #np.random.seed(2020)
         net_dataidx_map = {}
-        
         while min_size < min_require_size:
             idx_batch = [[] for _ in range(num_users)]
             for k in range(K):

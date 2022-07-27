@@ -17,7 +17,15 @@ class MLP(nn.Module):
         
 #        self.layer_hidden1 = nn.Linear(dim_hidden, dim_hidden)
 #        self.layer_hidden = nn.Linear(dim_hidden, dim_out)
-
+        
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=0.01)
+            if module.bias is not None:
+                module.bias.data.zero_()
+                                    
     def forward(self, x):
         x = x.view(-1, x.shape[1]*x.shape[-2]*x.shape[-1])
         x = self.layer_input(x)
