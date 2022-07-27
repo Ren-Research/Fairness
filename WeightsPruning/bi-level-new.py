@@ -16,7 +16,7 @@ from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, get_user_typep, g
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import FedAvg, FedAvg2, aggregate, aggregate_new, local_aggregate
+from models.Fed import FedAvg, FedAvg2, aggregate_nofair, aggregate_new
 from models.test import test_img, test_img_part
 
 
@@ -58,66 +58,6 @@ def get_half_paras(w_glob, part_dim):
     return w_l
 
 
-def partition_with_distribution(distribution, num_group_users, dataset, desire=3000):
-    all_dict_users = {}
-    all_traindata_cls_counts = {}
-    
-    idx = 0
-    for i in range(len(num_group_users)):
-        gp_dict = []
-        gp_cls = []
-        step = num_group_users[i] // len(distribution)
-        for j in range(len(distribution)):
-            #print(distribution[j])
-            dist = distribution[j]
-            if "beta" in dist:
-                beta = float(dist.split("beta")[-1])
-                dist = dist.split("beta")[0][:-1]
-            else:
-                beta = 0.4
-                
-            if j != len(distribution) - 1:
-                for _ in range(step):
-                    torch.manual_seed(100*(i+1) + _)
-                    np.random.seed(100*(i+1) + _)
-                    dict_users, traindata_cls_counts = partition_data(dataset, int(len(dataset.data) // desire), dist, beta)
-                    #print([len(dict_users[k]) for k in dict_users.keys()])
-                    
-                    min_diff = float("inf")
-                    min_idx = 0
-                    for k in dict_users.keys():
-                        if abs(len(dict_users[k]) - desire) < min_diff:
-                            min_idx = k
-                            min_diff = abs(len(dict_users[k]) - desire)
-                            
-                    all_dict_users[idx] = dict_users[min_idx]
-                    all_traindata_cls_counts[idx] = traindata_cls_counts[min_idx]
-                
-                    idx += 1
-            else:
-                for _ in range(num_group_users[i] - (len(distribution)-1)*step):
-                    torch.manual_seed(100*(i+1) + _)
-                    np.random.seed(100*(i+1) + _)
-                    dict_users, traindata_cls_counts = partition_data(dataset, int(len(dataset.data) // desire), dist, beta)
-                    #dict_users, traindata_cls_counts = partition_data(dataset, 20, dist, beta)
-                    
-                    min_diff = float("inf")
-                    min_idx = 0
-                    for k in dict_users.keys():
-                        if abs(len(dict_users[k]) - desire) < min_diff:
-                            min_idx = k
-                            min_diff = abs(len(dict_users[k]) - desire)
-                        
-                    all_dict_users[idx] = dict_users[min_idx]
-                    all_traindata_cls_counts[idx] = traindata_cls_counts[min_idx]
-                    
-                    idx += 1
-                    
-    print(all_dict_users.keys(), [len(all_dict_users[k]) for k in all_dict_users.keys()])
-        
-    return all_dict_users, all_traindata_cls_counts
-
-
 """
 AvgAll:
 leave bias alone,
@@ -125,7 +65,9 @@ use FedAvg2
 """
 
 if __name__ == '__main__':
-    distribution = ["noniid-labeldir-beta0.5", "noniid-labeldir-beta1","iid-diff-quantity-beta0.5", "noniid-#label5", "noniid-#label8"]
+    dataset_name = "mnist"
+    num_train = 1000
+    num_test = 1000
     
     seed = 0
     torch.manual_seed(seed)
@@ -216,9 +158,10 @@ if __name__ == '__main__':
     dataset.data = dataset.data[:n_samples]
     dataset.targets = dataset.targets[:n_samples]
     
+    input_data = pickle.load(open("./input/" + dataset_name + "_" + str(sum(num_group_users)) + "_"  + str(num_train) + "_" + str(num_test) + ".pickle", "rb"))
     
-    all_dict_users, all_traindata_cls_counts = partition_with_distribution(distribution, num_group_users, dataset, 3000)
-    #print(all_dict_users[0])
+    all_dict_users, all_traindata_cls_counts, label_split = input_data["all_dict_users"], input_data["all_traindata_cls_counts"], input_data["label_split"]
+    test_all_dict_users, test_all_traindata_cls_counts, test_label_split = input_data["test_all_dict_users"], input_data["test_all_traindata_cls_counts"], input_data["test_label_split"]
     
     all_gm = []
     all_pm = []
@@ -235,38 +178,19 @@ if __name__ == '__main__':
         all_gm.extend(tmp)
         
         start += num
-    print("all gm: ", all_gm, "all qm:", all_pm)
+    print("all gm: ", all_gm, "all pm:", all_pm)
         
 #    print("dataset", len(dict_users.keys()), [len(dict_users[k]) for k in dict_users.keys()])
     results["dict_users"] = all_dict_users
     results["traindata_cls_counts"] = all_traindata_cls_counts
     
-    #print("traindata_cls_counts", traindata_cls_counts)
-    for i in range(len(all_dict_users)):
-        label_split = [[] for _ in range(len(list(all_dict_users.keys())))]
-        for k in list(all_dict_users.keys()):
-            for key in list(all_traindata_cls_counts[k].keys()):
-                if all_traindata_cls_counts[k][key] != 0:
-                    label_split[k].append(key)
-    print("label_split", len(label_split), label_split[:10])
+    print("label_split", len(label_split), label_split[:10], all_traindata_cls_counts)
     results["label_split"] = label_split
     
     img_size = dataset_train[0][0].shape
-    
-    # partition test dataset
-    all_dict_users_test, all_traindata_cls_counts_test = partition_with_distribution(distribution, num_group_users, dataset_test, 1000)
-    #dict_users_test, _ = partition_data(dataset_test, args.num_users, args.test_partition)
-    #dict_users_test, _ = partition_data(dataset_test, 25, args.test_partition)
-    results["dict_users_test"] = all_dict_users_test
-    
-    for i in range(len(all_dict_users_test)):
-        label_split = [[] for _ in range(len(list(all_dict_users_test.keys())))]
-        for k in list(all_dict_users_test.keys()):
-            for key in list(all_traindata_cls_counts_test[k].keys()):
-                if all_traindata_cls_counts_test[k][key] != 0:
-                    label_split[k].append(key)
-    print("label_split_test", len(label_split), label_split[:10])
-    results["label_split_test"] = label_split
+    results["test_dict_users"] = test_all_dict_users
+    print("test_label_split", len(test_label_split), test_label_split[:10], test_all_traindata_cls_counts)
+    results["test_label_split"] = test_label_split
     
 
     # build model
@@ -326,7 +250,7 @@ if __name__ == '__main__':
         all_clients_epoch_test_loss = []
         all_clients_epoch_test_accuracy = []
         
-        if iter == 1:
+        if iter == 0:
             inital_glob = copy.deepcopy(w_glob)
         
         if iter > 0:  # >=5 , %5, % 50, ==5
@@ -355,8 +279,8 @@ if __name__ == '__main__':
             #u = active_user_idx[i]
             # local testing global model
             #acc_test, loss_test = test_img_part(model, dict_users_test[u], dataset_test, args)
-            acc_test, loss_test = test_img_part(model, all_dict_users_test[i], dataset_test, args)
-            print("User: " + str(i) + " # of test data samples: " + str(len(all_dict_users_test[i])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+            acc_test, loss_test = test_img_part(model, test_all_dict_users[i], dataset_test, args)
+            print("User: " + str(i) + " # of test data samples: " + str(len(test_all_dict_users[i])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
             #print("User: " + str(u) + " # of test data samples: " + str(len(dict_users_test[i%5])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
             
             # local updates
@@ -367,15 +291,14 @@ if __name__ == '__main__':
             #print("# of training data samples: " + str(len(dict_users_homo[i%5])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
             print()
             
-            w = get_half_paras(w, user_dim[i])
+            #w = get_half_paras(w, user_dim[i])
             
             all_clients_epoch_train_loss.append(loss)
             all_clients_epoch_train_accuracy.append(acc_train)
             all_clients_epoch_test_loss.append(loss_test)
             all_clients_epoch_test_accuracy.append(acc_test)
             
-            #if args.bilevel and iter > 0:
-            if True:
+            if args.bilevel and iter > 0:
                 if args.test_loss:
                     l = copy.deepcopy(loss_test)
                 else:
@@ -442,8 +365,8 @@ if __name__ == '__main__':
         if args.bilevel and iter > 0:
             w_glob = aggregate_new(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
         else:
-            w_glob = aggregate_new(all_grad, all_loss, [0] * len(user_q), user_dim, 0, w_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
-            #w_glob = aggregate(w_glob, args.device, w_locals, user_dim)
+            #w_glob = aggregate_new(all_grad, all_loss, [0] * len(user_q), user_dim, 0, w_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            w_glob = aggregate_nofair(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob)
             
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
@@ -473,7 +396,7 @@ if __name__ == '__main__':
             file_name = "no-bilevel"
         else:
             file_name = "global_q_" + str(args.global_q) + "_group_q_" + str(args.group_q) + "_group_dim_" + str(args.group_dim) + "_group_user_" + str(args.num_group_users)
-        pickle.dump(results, open("./data/" + file_name + ".pickle", "wb"))  # save it into a file named save.p
+        pickle.dump(results, open("./data/tmp/" + file_name + ".pickle", "wb"))  # save it into a file named save.p
         
         #print(results)
 
