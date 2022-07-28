@@ -277,6 +277,140 @@ def aggregate_new(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L
     return w
 
 
+def aggregate_nofair_group(all_w, device, user_gm, user_pm, user_group_idx, user_dim, w_glob):
+    group_to_user = collections.defaultdict(list)  # key: group index, value: [user index]
+    for i in range(len(user_group_idx)):
+        gp = user_group_idx[i]
+        group_to_user[gp].append(i)
+        
+    w = copy.deepcopy(w_glob)
+    
+    idx = 0
+    for gp in group_to_user.keys():
+        u0, g0 = group_to_user[gp][0], gp
+        tmp = copy.deepcopy(all_w[u0]) 
+        for k in w.keys():
+            tmp[k] *= user_pm[u0] * user_gm[u0]
+            
+        for i in range(1, len(group_to_user[gp])):
+            u, g = group_to_user[gp][i], gp
+            for k in w.keys():
+                tmp[k] += copy.deepcopy(all_w[u])[k] * user_pm[u] * user_gm[u]
+                
+        if tmp["layer_input.weight"].shape[0] != 200:
+            dim = user_dim[u0]
+            zeros = torch.zeros(200-dim, 784).to(device)
+            tmp["layer_input.weight"] = torch.vstack((tmp["layer_input.weight"], zeros))
+            
+            zeros = torch.tensor([0] * (200-dim)).to(device)
+            tmp["layer_input.bias"] = torch.hstack((tmp["layer_input.bias"], zeros))
+            
+            zeros = torch.zeros(10, 200-dim).to(device)
+            tmp["layer_hidden.weight"] = torch.hstack((tmp["layer_hidden.weight"], zeros))
+        
+        if idx == 0:
+            w = copy.deepcopy(tmp)
+        else:
+            for k in w.keys():
+                w[k] += tmp[k]
+                
+        idx += 1
+
+    return w
+
+
+def aggregate_group(all_grad, all_loss, all_qm, user_dim, global_q, inital_glob, L, w_glob, device, user_gm, user_pm, user_group_idx):  
+    group_to_user = collections.defaultdict(list)  # key: group index, value: [user index]
+    for i in range(len(user_group_idx)):
+        gp = user_group_idx[i]
+        group_to_user[gp].append(i)
+        
+    group_to_delta = {}  # key:  group index, value: [user delta]
+    group_to_hs = {}  # key:  group index, value: [user hs]
+    
+    for gp in list(group_to_user.keys()):
+        cur_user = group_to_user[gp]
+        
+        gm = user_gm[cur_user[0]]     
+        f_m0 = all_loss[cur_user[0]]
+        p_m0 = user_pm[cur_user[0]]
+        qm = all_qm[cur_user[0]]
+        weighted_f = p_m0 * f_m0 ** (qm + 1)
+        #delta =  clip_paras(copy.deepcopy(all_grad[cur_user[0]]), dim_key[0], dim_key[1])
+        delta = copy.deepcopy(all_grad[cur_user[0]])
+        for key in delta.keys():
+            delta[key] *= p_m0 * (qm + 1) * f_m0 ** qm
+            
+        for i in range(1, len(cur_user)):
+            user = cur_user[i]
+            
+            f_mi = all_loss[user]
+            p_mi = user_pm[user]
+            weighted_f += p_mi * f_mi ** (qm + 1)
+            
+            for key in delta.keys():
+                #delta[key] += p_mi * (qm + 1) * f_mi ** qm * copy.deepcopy(clip_paras(all_grad[user], dim_key[0], dim_key[1])[key])
+                delta[key] += p_mi * (qm + 1) * f_mi ** qm * copy.deepcopy(all_grad[user][key])
+                
+        for key in delta.keys():
+            delta[key] *= gm / (qm + 1) * weighted_f ** ((global_q - qm) / (qm + 1))
+            
+        group_to_delta[gp] = delta
+        
+        f_m0 = all_loss[cur_user[0]]
+        p_m0 = user_pm[cur_user[0]]
+        weighted_f1 = p_m0 * f_m0 ** (qm + 1)
+        weighted_f2 = p_m0 * (qm + 1) * f_m0 ** qm * L
+        #weighted_norm = p_m0 * (qm + 1) * qm * f_m0 ** (qm - 1) * norm_grad(copy.deepcopy(clip_paras(all_grad[cur_user[0]], dim_key[0], dim_key[1]))) / norm_grad(inital_glob)
+        weighted_norm = p_m0 * (qm + 1) * qm * f_m0 ** (qm - 1) * norm_grad(copy.deepcopy(all_grad[cur_user[0]])) / norm_grad(inital_glob)
+        #delta =  clip_paras(copy.deepcopy(all_grad[cur_user[0]]), dim_key[0], dim_key[1])
+        delta =  copy.deepcopy(all_grad[cur_user[0]])
+        for key in delta.keys():
+            delta[key] *= p_m0 * (qm + 1) * f_m0 ** qm
+            
+        for i in range(1, len(cur_user)):
+            user = cur_user[i]
+            
+            f_mi = all_loss[user]
+            p_mi = user_pm[user]
+            weighted_f1 += p_mi * f_mi ** (qm + 1)
+            for key in delta.keys():
+                #delta[key] += p_mi * (qm + 1) * f_mi ** qm * copy.deepcopy(clip_paras(all_grad[user], dim_key[0], dim_key[1])[key])
+                delta[key] += p_mi * (qm + 1) * f_mi ** qm * copy.deepcopy(all_grad[user][key])
+                
+            #weighted_norm += p_mi * (qm + 1) * qm * f_mi ** (qm - 1) * norm_grad(copy.deepcopy(clip_paras(all_grad[user], dim_key[0], dim_key[1]))) / norm_grad(inital_glob)
+            weighted_norm += p_mi * (qm + 1) * qm * f_mi ** (qm - 1) * norm_grad(copy.deepcopy(all_grad[user])) / norm_grad(inital_glob)
+            weighted_f2 += p_mi * (qm + 1) * f_mi ** qm * L
+            
+        group_to_hs[gp] = gm / (qm + 1) * (global_q - qm) / (qm + 1) * weighted_f1 ** ((global_q - 2 * qm - 1) / (qm + 1)) * (norm_grad(delta) / norm_grad(inital_glob)) + gm / (qm + 1) * weighted_f1 ** ((global_q - qm) / (qm + 1)) * (weighted_norm + weighted_f2) 
+    
+    
+    scaled_delta = copy.deepcopy(group_to_delta)
+    denom = sum(group_to_hs.values())
+    for gp in scaled_delta.keys():
+        for k in scaled_delta[gp].keys():
+            scaled_delta[gp][k] /= denom
+            
+        #print("hhhhhh", scaled_delta[gp]["layer_input.weight"].shape[0])
+        if scaled_delta[gp]["layer_input.weight"].shape[0] != 200:
+            dim = user_dim[group_to_user[gp][0]]
+            zeros = torch.zeros(200-dim, 784).to(device)
+            scaled_delta[gp]["layer_input.weight"] = torch.vstack((scaled_delta[gp]["layer_input.weight"], zeros))
+            
+            zeros = torch.tensor([0] * (200-dim)).to(device)
+            scaled_delta[gp]["layer_input.bias"] = torch.hstack((scaled_delta[gp]["layer_input.bias"], zeros))
+            
+            zeros = torch.zeros(10, 200-dim).to(device)
+            scaled_delta[gp]["layer_hidden.weight"] = torch.hstack((scaled_delta[gp]["layer_hidden.weight"], zeros))
+    
+    w = copy.deepcopy(w_glob)
+    for key in w.keys():
+        for d1 in scaled_delta.values():
+            w[key] -= d1[key]
+                
+    return w
+
+
 
             
 

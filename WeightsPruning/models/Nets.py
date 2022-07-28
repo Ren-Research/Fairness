@@ -36,6 +36,8 @@ class MLP(nn.Module):
 #        x = self.layer_hidden1(x)
 #        x = self.layer_hidden(x)
         return x
+    
+    
 
 
 class CNNMnist(nn.Module):

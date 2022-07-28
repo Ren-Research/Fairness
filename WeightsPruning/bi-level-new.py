@@ -16,7 +16,7 @@ from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, get_user_typep, g
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import FedAvg, FedAvg2, aggregate_nofair, aggregate_new
+from models.Fed import aggregate_group, aggregate_nofair_group, aggregate_new, aggregate_nofair
 from models.test import test_img, test_img_part
 
 
@@ -115,10 +115,10 @@ if __name__ == '__main__':
             [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
         dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=trans_cifar)
-        if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
-        else:
-            exit('Error: only consider IID setting in CIFAR10')
+#        if args.iid:
+#            dict_users = cifar_iid(dataset_train, args.num_users)
+#        else:
+#            exit('Error: only consider IID setting in CIFAR10')
     else:
         exit('Error: unrecognized dataset')
     
@@ -306,14 +306,17 @@ if __name__ == '__main__':
                     
                 all_loss.append(l)
                 
-                update = copy.deepcopy(w)
+                update = copy.deepcopy(w_glob)
                 keys = update.keys()
                 for k in keys:
                     shape = w[k].shape
+                    #print(shape)
                     if len(shape) == 2:
-                        update[k] = (w_glob[k][:shape[0], :shape[1]] - w[k]) * L
+                        #update[k] = (w_glob[k][:shape[0], :shape[1]] - w[k]) * L
+                        update[k][:shape[0], :shape[1]] = w_glob[k][:shape[0], :shape[1]] - w[k]
                     else:
-                        update[k] = (w_glob[k][:shape[0]] - w[k]) * L
+                        update[k][:shape[0]] = w_glob[k][:shape[0]] - w[k]
+                    update[k] *= L
                 all_grad.append(update)
                 
             w_locals.append(copy.deepcopy(w))
@@ -363,10 +366,11 @@ if __name__ == '__main__':
         #w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
         #w_glob = aggregate(w_glob, 100, w_locals)
         if args.bilevel and iter > 0:
-            w_glob = aggregate_new(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            #w_glob = aggregate_new(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            w_glob = aggregate_group(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
         else:
             #w_glob = aggregate_new(all_grad, all_loss, [0] * len(user_q), user_dim, 0, w_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
-            w_glob = aggregate_nofair(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob)
+            w_glob = aggregate_nofair_group(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob)
             
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
