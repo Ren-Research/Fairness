@@ -50,5 +50,7 @@ def args_parser():
     parser.add_argument('--group_dim', type=str, default="25,25", help='dimension of architecture of each group, split by ","')
     parser.add_argument('--group_q', type=str, default="0,0", help='qm of each group, split by ","')
     
+    parser.add_argument('--group', action='store_true', help='group update or region update')
+    
     args = parser.parse_args()
     return args

@@ -22,7 +22,7 @@ class MLP(nn.Module):
         
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=0.01)
+            module.weight.data.normal_(mean=0.0, std=0.1)
             if module.bias is not None:
                 module.bias.data.zero_()
                                     
@@ -60,19 +60,23 @@ class CNNMnist(nn.Module):
 
 
 class CNNCifar(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, rate=1, kernel=5):
         super(CNNCifar, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv1 = nn.Conv2d(3, int(6*rate), kernel)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, args.num_classes)
+        self.conv2 = nn.Conv2d(int(6*rate), int(16*rate), 5)
+        self.fc1 = nn.Linear(int(16*rate) * 5 * 5, int(120*rate))
+        self.fc2 = nn.Linear(int(120*rate), int(84*rate))
+        self.fc3 = nn.Linear(int(84*rate), args.num_classes)
+        
+        self.rate = rate
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
+        
+        x = x.view(-1, int(16*self.rate) * 5 * 5)
+        
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
