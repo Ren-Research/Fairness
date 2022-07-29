@@ -8,7 +8,7 @@ from torch import nn
 import numpy as np
 import collections
 
-from models.Nets import CNNCifar
+from models.Nets import CNNCifar, cnn
 
 
 def norm_grad(grad_list):
@@ -45,9 +45,9 @@ def clip_paras(w_glob, lo, hi):
 def clip_paras_cnn(w_glob, lo, hi, args):
     w_l = copy.deepcopy(w_glob)
     
-    net_hi = CNNCifar(args, hi)
+    net_hi = cnn(args, hi)
     hi_param = net_hi.state_dict()
-    net_lo = CNNCifar(args, lo)
+    net_lo = cnn(args, lo)
     lo_param = net_lo.state_dict()
     
     keys = list(w_l.keys())
@@ -652,9 +652,9 @@ def aggregate_nofair_cnn(all_w, device, user_gm, user_pm, user_group_idx, user_d
                 tmp[k] += copy.deepcopy(clip_paras_cnn(all_w[u], dim_key[0], dim_key[1], args))[k] * user_pm[u] * user_gm[u]
         
         
-        net_hi = CNNCifar(args, dim_key[1])
+        net_hi = cnn(args, dim_key[1])
         hi_param = net_hi.state_dict()
-        net_lo = CNNCifar(args, dim_key[0])
+        net_lo = cnn(args, dim_key[0])
         lo_param = net_lo.state_dict()
         
         keys = list(w.keys())

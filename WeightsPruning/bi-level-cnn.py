@@ -15,7 +15,7 @@ import torch
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, get_user_typep, get_local_wmasks, get_local_bmasks, partition_data
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar
+from models.Nets import MLP, CNNMnist, CNNCifar, cnn
 from models.Fed import aggregate_group_cnn, aggregate_nofair_group_cnn, aggregate_new_cnn, aggregate_nofair_cnn
 from models.test import test_img, test_img_part
 
@@ -51,6 +51,7 @@ def get_half_paras(w_glob, w):
     keys = list(w_l.keys())
     for i in range(len(keys)):
         shape = w[keys[i]].shape
+        #print(shape, w_l[keys[i]].shape)
         
         if len(shape) == 4:
             w_l[keys[i]] = w_l[keys[i]][:shape[0], :shape[1], :, :]
@@ -189,12 +190,12 @@ if __name__ == '__main__':
     if args.model == 'cnn' and args.dataset == 'cifar':
         kernel_size = 5
         
-        net_glob = CNNCifar(args=args, rate=1, kernel=kernel_size).to(args.device)
+        net_glob = cnn(args=args, rate=1, kernel=kernel_size).to(args.device)
 
         net_part = []
         idx = 0
         for part_dim in user_dim:
-            net = CNNCifar(args=args, rate=part_dim, kernel=kernel_size).to(args.device)
+            net = cnn(args=args, rate=part_dim, kernel=kernel_size).to(args.device)
             net_part.append(net)
             print("network " + str(idx) + ":", net)
             idx += 1
@@ -221,6 +222,20 @@ if __name__ == '__main__':
         
     net_glob.load_state_dict(starting_weights)
     
+#    args.local_ep = 30
+#    net_glob = cnn(args=args, rate=0.5, kernel=5).to(args.device)
+#    print([net_glob.state_dict()[k].shape for k in net_glob.state_dict().keys()])
+#    net_glob.eval()
+#    acc_test, loss_test = test_img_part(net_glob, test_all_dict_users[0], dataset_test, args)
+#    print("User: " + str(i) + " # of test data samples: " + str(len(test_all_dict_users[0])) + ", test accuracy: " + str(acc_test.item()) + ", test loss: " + str(loss_test))
+#    
+#    local = LocalUpdate(args=args, dataset=dataset_train, idxs=all_dict_users[0])
+#    w, loss, acc_train, trained_model = local.train(net=copy.deepcopy(net_glob).to(args.device))
+#    print("# of training data samples: " + str(len(all_dict_users[0])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
+#    #print("# of training data samples: " + str(len(dict_users_homo[i%5])) + ", training accuracy: " + str(acc_train) + ", training loss: " + str(loss))
+#    print()
+    
+    
     # training
     ##########################TEMP USE FOR STRATING LOSS
     net_glob.eval()
@@ -236,7 +251,7 @@ if __name__ == '__main__':
 
     loss_train = []
     for iter in range(args.epochs):
-        #print(w_glob)
+        #print("w_glob", w_glob)
         
         all_clients_epoch_train_loss = []
         all_clients_epoch_train_accuracy = []

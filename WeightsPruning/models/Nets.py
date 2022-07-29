@@ -82,3 +82,27 @@ class CNNCifar(nn.Module):
         x = self.fc3(x)
         return x
     
+    
+class cnn(nn.Module):
+    def __init__(self, args, rate=1, kernel=5):
+        super(cnn, self).__init__()
+        self.conv1 = nn.Conv2d(3, int(32*rate), kernel_size=kernel)
+        size1 = (32 - kernel + 2*0) / 1 + 1 # input image size: 32, after conv2d
+        self.pool = nn.MaxPool2d(2, 2)
+        size2 = (size1 - 2 + 2*0) // 2 + 1   # after pooling
+        self.conv2 = nn.Conv2d(int(32*rate), int(32*rate), kernel_size=kernel)
+        size3 = (size2 - kernel + 2*0) / 1 + 1  # after conv2d
+        size4 = (size3 - 2 + 2*0) // 2 + 1   # after pooling
+        size5 = int(32*rate) * size4 * size4    # input for fc1
+        #print(size1, size2, size3, size4, size5)
+        self.fc1 = nn.Linear(int(size5), int(256*rate))
+        self.fc2 = nn.Linear(int(256*rate), 10)
+        
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+    
