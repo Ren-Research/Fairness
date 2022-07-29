@@ -16,7 +16,7 @@ from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, get_user_typep, g
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import aggregate_group_cnn, aggregate_nofair_group_cnn, aggregate_new, aggregate_nofair
+from models.Fed import aggregate_group_cnn, aggregate_nofair_group_cnn, aggregate_new_cnn, aggregate_nofair_cnn
 from models.test import test_img, test_img_part
 
 
@@ -365,11 +365,19 @@ if __name__ == '__main__':
         #w_glob = FedAvg2(w_locals, type_array, local_w_masks, local_b_masks)
         #w_glob = aggregate(w_glob, 100, w_locals)
         if args.bilevel and iter > 0:
-            #w_glob = aggregate_new(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
-            w_glob = aggregate_group_cnn(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            if args.group:
+                print("="*50, "Group Update", "="*50)
+                w_glob = aggregate_group_cnn(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
+            else:
+                print("="*50, "Region Update", "="*50)
+                w_glob = aggregate_new_cnn(all_grad, all_loss, user_q, user_dim, args.global_q, inital_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx, args)
         else:
-            #w_glob = aggregate_new(all_grad, all_loss, [0] * len(user_q), user_dim, 0, w_glob, L, w_glob, args.device, all_gm, all_pm, user_group_idx)
-            w_glob = aggregate_nofair_group_cnn(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob)
+            if args.group:
+                print("="*50, "Group Update", "="*50)
+                w_glob = aggregate_nofair_group_cnn(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob)
+            else:
+                print("="*50, "Region Update", "="*50)
+                w_glob = aggregate_nofair_cnn(w_locals, args.device, all_gm, all_pm, user_group_idx, user_dim, w_glob, args)
             
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
